@@ -1,0 +1,198 @@
+@model Template.Web.Areas.Dipendente.Controllers.DipendenteDashboardViewModel
+@{
+    ViewData["Title"] = "Attività – Dashboard Dipendente";
+}
+
+@section pageTitle {
+    <div class="onit-page-title">
+        <h1><i class="fa-solid fa-calendar-check"></i> Attività</h1>
+    </div>
+}
+
+<div class="container-fluid onit-page-content">
+
+    <div class="row">
+        <!-- SIDEBAR ONIT -->
+        <div class="col-2 onit-sidebar">
+            <div class="onit-sidebar-user">
+                <div class="fw-bold">@Model.NomeCompleto</div>
+                <small class="text-muted">@Model.Email</small>
+            </div>
+
+            <ul class="onit-sidebar-menu">
+                <li>
+                    <a class="active"
+                       asp-area="Dipendente"
+                       asp-controller="Dashboard"
+                       asp-action="Index">
+                        <i class="fa-solid fa-calendar-check"></i> Attività
+                    </a>
+                </li>
+                <li>
+                    <a asp-area="Dipendente"
+                       asp-controller="Rendicontazione"
+                       asp-action="Index">
+                        <i class="fa-solid fa-clipboard-list"></i> Rendicontazione settimanale
+                    </a>
+                </li>
+                <li>
+                    <a asp-area="Dipendente"
+                    asp-controller="Congedo"
+                    asp-action="Index">
+                    <i class="fa-solid fa-plane-departure"></i> Congedo
+                    </a>
+                </li>
+                <li>
+                    <a asp-area="Dipendente"
+                       asp-controller="Contratto"
+                       asp-action="Index">
+                        <i class="fa-solid fa-file-contract"></i> Contratto
+                    </a>
+                </li>
+                <li>
+                    <a asp-area="Dipendente"
+                       asp-controller="Progetti"
+                       asp-action="Index">
+                        <i class="fa-solid fa-diagram-project"></i> Progetti
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- MAIN CONTENT -->
+        <div class="col-10">
+
+            <!-- Toolbar stile ONIT -->
+            <div class="onit-toolbar d-flex justify-content-between align-items-center mb-3">
+
+                <div class="btn-group">
+                    <button id="btnGiorno" class="btn btn-outline-primary">Giorno</button>
+                    <button id="btnSettimana" class="btn btn-outline-primary">Settimana</button>
+                    <button id="btnMese" class="btn btn-primary">Mese</button>
+                </div>
+
+                <h3 class="fw-bold" id="titleCalendar">Calendario Attività</h3>
+
+                <div class="btn-group">
+                    <button id="prevBtn" class="btn btn-outline-secondary">
+                        <i class="fa-solid fa-chevron-left"></i>
+                    </button>
+                    <button id="nextBtn" class="btn btn-outline-secondary">
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+                </div>
+
+            </div>
+
+            <div class="row">
+                <div class="col-12">
+                    <div class="onit-card p-3" style="min-height:650px">
+                        <div id="calendar"></div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+<!-- MODALE INSERIMENTO / MODIFICA ATTIVITÀ -->
+<div class="modal fade" id="modaleOre" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content onit-card">
+
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fa-solid fa-pen-to-square"></i> Inserisci attività</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+
+                <p class="fw-bold mb-3">
+                    Giorno selezionato: <span id="dataSelezionata" class="text-primary"></span>
+                </p>
+
+                <div class="row mb-3">
+                    <div class="col-6">
+                        <label class="onit-label-required">Orario inizio</label>
+                        <input id="oraInizio" type="time" class="form-control" />
+                    </div>
+
+                    <div class="col-6">
+                        <label class="onit-label-required">Orario fine</label>
+                        <input id="oraFine" type="time" class="form-control" />
+                    </div>
+                </div>
+
+                <label class="onit-label-required">Progetto</label>
+                <input id="progetto" class="form-control mb-3" />
+
+                <label class="onit-label-required">Cliente</label>
+                <input id="cliente" class="form-control mb-3" />
+
+                <label class="onit-label-required">Attività</label>
+                <input id="attivita" class="form-control mb-3" />
+
+                <label>Descrizione</label>
+                <textarea id="descrizione" class="form-control mb-4"></textarea>
+
+                <!-- SWITCH TRASFERTA -->
+                <div class="form-check form-switch mb-3">
+                    <input class="form-check-input" type="checkbox" id="checkTrasferta">
+                    <label class="form-check-label" for="checkTrasferta">Trasferta</label>
+                </div>
+
+                <!-- SEZIONE COSTI TRASFERTA -->
+                <div id="boxTrasferta" style="display:none">
+                    <label class="fw-bold mb-2">Spese Trasferta (€)</label>
+
+                    <div class="row">
+                        <div class="col-4">
+                            <label>Trasporto</label>
+                            <input id="spesaTrasporto" type="number" min="0" class="form-control mb-2" />
+                        </div>
+                        <div class="col-4">
+                            <label>Vitto</label>
+                            <input id="spesaVitto" type="number" min="0" class="form-control mb-2" />
+                        </div>
+                        <div class="col-4">
+                            <label>Alloggio</label>
+                            <input id="spesaAlloggio" type="number" min="0" class="form-control mb-2" />
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="modal-footer">
+                <button id="btnElimina" class="btn btn-danger me-auto" style="display:none">
+                    Elimina
+                </button>
+
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Chiudi</button>
+                <button id="btnSalva" class="btn btn-primary">Salva</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+@section styles {
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet" />
+}
+
+@section scripts {
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+
+    <script>
+        document.getElementById("checkTrasferta").addEventListener("change", function () {
+            document.getElementById("boxTrasferta").style.display =
+                this.checked ? "block" : "none";
+        });
+
+    </script>
+
+    <script src="~/js/dashboard-calendar.js"></script>
+}

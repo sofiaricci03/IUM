@@ -1,0 +1,55 @@
+@{
+    ViewData["Title"] = "Progetti";
+}
+
+<div class="error-wrapper text-center">
+
+    <img src="https://i.imgur.com/qIufhof.png" class="error-img" />
+
+    <h1 class="mt-4">Oops! I progetti stanno ancora lavorando su... se stessi 😅</h1>
+
+    <p class="lead mt-3">
+        Stiamo costruendo qualcosa di fantastico qui.<br />
+        Ma sembra che il team dei progetti si sia preso una pausa caffè ☕️.
+    </p>
+
+    <button class="btn btn-primary mt-4" onclick="window.location.href='/Dipendente/Dashboard'">
+        Torna alla Dashboard
+    </button>
+
+</div>
+
+<style>
+    .error-wrapper {
+        margin-top: 80px;
+        padding: 40px;
+        animation: fadeIn 0.9s ease-in-out;
+    }
+
+    .error-img {
+        width: 260px;
+        opacity: 0.9;
+        animation: float 2.5s infinite ease-in-out;
+    }
+
+    @@keyframes float {
+        0%   { transform: translateY(0px); }
+        50%  { transform: translateY(-12px); }
+        100% { transform: translateY(0px); }
+    }
+
+    @@keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    h1 {
+        font-weight: 700;
+        color: #444;
+    }
+
+    .lead {
+        font-size: 1.25rem;
+        color: #666;
+    }
+</style>

@@ -1,0 +1,211 @@
+@model Template.Web.Areas.Dipendente.Controllers.DipendenteDashboardViewModel
+@{
+    ViewData["Title"] = "Attività – Dashboard Dipendente";
+}
+
+@section pageTitle {
+    <div class="onit-page-title">
+        <h1><i class="fa-solid fa-calendar-check"></i> Attività</h1>
+    </div>
+}
+
+<div class="container-fluid onit-page-content">
+
+    <div class="row">
+
+        <!-- SIDEBAR -->
+        <div class="col-2 onit-sidebar">
+
+            <div class="onit-sidebar-user">
+                <div class="fw-bold">@Model.NomeCompleto</div>
+                <small class="text-muted">@Model.Email</small>
+            </div>
+
+            <ul class="onit-sidebar-menu">
+                <li>
+                    <a class="active"
+                       asp-area="Dipendente"
+                       asp-controller="Dashboard"
+                       asp-action="Index">
+                        <i class="fa-solid fa-calendar-check"></i> Attività
+                    </a>
+                </li>
+
+                <li>
+                    <a asp-area="Dipendente"
+                       asp-controller="Rendicontazione"
+                       asp-action="Index">
+                        <i class="fa-solid fa-clipboard-list"></i> Rendicontazione settimanale
+                    </a>
+                </li>
+
+                <li>
+                    <a asp-area="Dipendente"
+                       asp-controller="Contratto"
+                       asp-action="Index">
+                        <i class="fa-solid fa-file-contract"></i> Contratto
+                    </a>
+                </li>
+
+                <li>
+                    <a asp-area="Dipendente"
+                       asp-controller="Progetti"
+                       asp-action="Index">
+                        <i class="fa-solid fa-diagram-project"></i> Progetti
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- MAIN CONTENT -->
+        <div class="col-10">
+
+            <!-- Toolbar -->
+            <div class="onit-toolbar d-flex justify-content-between align-items-center mb-3">
+
+                <!-- Viste -->
+                <div class="btn-group">
+                    <button id="btnGiorno" class="btn btn-outline-primary">Giorno</button>
+                    <button id="btnSettimana" class="btn btn-outline-primary">Settimana</button>
+                    <button id="btnMese" class="btn btn-primary">Mese</button>
+                </div>
+
+                <!-- Titolo mese -->
+                <h3 class="fw-bold" id="titleCalendar"></h3>
+
+                <!-- Navigazione + Zoom -->
+                <div class="d-flex align-items-center">
+                    <div class="btn-group me-3">
+                        <button id="prevBtn" class="btn btn-outline-secondary">
+                            <i class="fa-solid fa-chevron-left"></i>
+                        </button>
+                        <button id="nextBtn" class="btn btn-outline-secondary">
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </button>
+                    </div>
+
+                    <!-- SLIDER ZOOM -->
+                    <div class="d-flex align-items-center">
+                        <label class="me-2"><i class="fa-solid fa-magnifying-glass"></i></label>
+                        <input id="zoomSlider" type="range" min="5" max="40" value="10" step="1" />
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="row">
+                <div class="col-12">
+                    <div class="onit-card p-3" style="min-height:650px">
+                        <div id="calendar"></div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+<!-- MODALE INSERIMENTO / MODIFICA ATTIVITÀ -->
+<div class="modal fade" id="modaleOre" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content onit-card">
+
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fa-solid fa-pen-to-square"></i> Attività</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+
+                <!-- Data selezionata -->
+                <h6 class="fw-bold mb-3">Data: <span id="dataSelezionata"></span></h6>
+
+                <div class="row">
+                    <div class="col-6">
+                        <label class="onit-label-required">Orario inizio</label>
+                        <input id="oraInizio" type="time" class="form-control mb-3" />
+                    </div>
+
+                    <div class="col-6">
+                        <label class="onit-label-required">Orario fine</label>
+                        <input id="oraFine" type="time" class="form-control mb-3" />
+                    </div>
+                </div>
+
+                <label class="onit-label-required">Progetto</label>
+                <input id="progetto" class="form-control mb-3" />
+
+                <label class="onit-label-required">Cliente</label>
+                <input id="cliente" class="form-control mb-3" />
+
+                <label class="onit-label-required">Attività</label>
+                <input id="attivita" class="form-control mb-3" />
+
+                <label>Descrizione (opzionale)</label>
+                <textarea id="descrizione" class="form-control mb-3"></textarea>
+
+                <!-- Trasferta -->
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" id="checkTrasferta">
+                    <label class="form-check-label">Attività in trasferta</label>
+                </div>
+
+                <div id="boxTrasferta" style="display:none">
+                    <label class="fw-bold">Spese trasferta</label>
+
+                    <div class="row mt-2">
+                        <div class="col-4">
+                            <label>Trasporto (€)</label>
+                            <input id="spesaTrasporto" type="number" class="form-control mb-2" />
+                        </div>
+                        <div class="col-4">
+                            <label>Vitto (€)</label>
+                            <input id="spesaVitto" type="number" class="form-control mb-2" />
+                        </div>
+                        <div class="col-4">
+                            <label>Alloggio (€)</label>
+                            <input id="spesaAlloggio" type="number" class="form-control mb-2" />
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Chiudi</button>
+                <button id="btnSalva" class="btn btn-primary">Salva</button>
+                <button id="btnElimina" class="btn btn-danger me-auto" style="display:none;">Elimina</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+@section styles {
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet" />
+
+    <style>
+        #zoomSlider {
+            width: 120px;
+            accent-color: #007bff;
+            cursor: pointer;
+        }
+
+        :root {
+            --zoom-padding: 10px;
+        }
+
+        .fc-daygrid-day-frame {
+            padding-top: var(--zoom-padding) !important;
+            padding-bottom: var(--zoom-padding) !important;
+            transition: padding 0.15s ease-in-out;
+        }
+    </style>
+}
+
+@section scripts {
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+    <script src="~/js/dashboard-calendar.js"></script>
+}

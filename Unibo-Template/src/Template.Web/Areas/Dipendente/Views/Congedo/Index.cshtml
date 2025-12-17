@@ -1,0 +1,50 @@
+@{
+    ViewData["Title"] = "Gestione Congedi";
+}
+
+@section pageTitle {
+    <div class="onit-page-title">
+        <h1><i class="fa-solid fa-plane"></i> Congedo</h1>
+    </div>
+}
+
+<div class="container-fluid onit-page-content">
+    <div id="calendarFerie" class="onit-card p-3" style="min-height:650px"></div>
+</div>
+
+<!-- Modale richiesta -->
+<div class="modal fade" id="modaleFerie" tabindex="-1">
+    <div class="modal-dialog modal-md">
+        <div class="modal-content onit-card">
+            <div class="modal-header">
+                <h5 class="modal-title">Richiesta ferie / permesso</h5>
+                <button class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p><b>Periodo:</b> <span id="periodoFerie"></span></p>
+                <p><b>Giorni totali:</b> <span id="totaleGiorni"></span></p>
+
+                <label>Tipo</label>
+                <select id="tipoFerie" class="form-control mb-2">
+                    <option value="Ferie">Ferie</option>
+                    <option value="Permesso">Permesso</option>
+                </select>
+
+                <label>Motivo</label>
+                <textarea id="descrizioneFerie" class="form-control"></textarea>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Chiudi</button>
+                <button class="btn btn-primary" id="btnRichiediFerie">Richiedi</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section styles {
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet" />
+}
+@section scripts {
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+    <script src="~/js/dashboard-ferie.js"></script>
+}

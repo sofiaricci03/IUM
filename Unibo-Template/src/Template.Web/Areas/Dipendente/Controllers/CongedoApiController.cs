@@ -1,0 +1,156 @@
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Linq;
+using System.Security.Claims;
+using Template.Entities;
+using Template.Services;
+using Template.Services.Shared;
+using Template.Web.Areas.Dipendente.Models;
+
+namespace Template.Web.Areas.Dipendente.Controllers
+{
+    [Area("Dipendente")]
+    [Authorize(Roles = nameof(UserRole.Dipendente))]
+    [ApiController]
+    [Route("Dipendente/[controller]/[action]")]
+    public partial class CongedoApiController : ControllerBase
+    {
+        private readonly TemplateDbContext _ctx;
+
+        public CongedoApiController(TemplateDbContext ctx)
+        {
+            _ctx = ctx;
+        }
+
+        // =========================
+        // GET – Eventi calendario
+        // =========================
+        [HttpGet]
+        public virtual IActionResult GetRichieste()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var dip = _ctx.Dipendenti.FirstOrDefault(d => d.UserId.ToString() == userId);
+            if (dip == null) return Unauthorized();
+
+            var richieste = _ctx.RichiestaFerie
+                .Where(r => r.DipendenteId == dip.Id)
+                .Select(r => new
+                {
+                    id = r.Id,
+                    title = r.Tipo,
+                    start = r.DataInizio,
+                    end = r.Tipo == "Ferie"
+                        ? r.DataFine.AddDays(1)
+                        : (DateTime?)null,
+                    allDay = true,
+
+                    color = r.Tipo == "Ferie" ? "#ff4d4d" : "#ffa500",
+
+                    extendedProps = new
+                    {
+                        motivo = r.Motivo,
+                        tipo = r.Tipo,
+                        stato = r.Stato
+                    }
+                })
+                .ToList();
+
+            return Ok(richieste);
+        }
+
+        // =========================
+        // POST – nuova richiesta
+        // =========================
+        [HttpPost]
+        public virtual IActionResult Richiedi([FromBody] RichiestaFerieDTO dto)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var dip = _ctx.Dipendenti.FirstOrDefault(d => d.UserId.ToString() == userId);
+            if (dip == null) return Unauthorized();
+
+            if (!DateTime.TryParse(dto.dal, out var inizio))
+                return BadRequest("Data inizio non valida");
+
+            DateTime fine;
+            if (dto.tipo == "Permesso")
+                fine = inizio;
+            else if (!DateTime.TryParse(dto.al, out fine))
+                return BadRequest("Data fine non valida");
+
+            var richiesta = new RichiestaFerie
+            {
+                DipendenteId = dip.Id,
+                DataInizio = inizio,
+                DataFine = fine,
+                Motivo = dto.motivo,
+                Tipo = dto.tipo,
+                Stato = FerieStato.InAttesa,
+                DataRichiesta = DateTime.Now
+            };
+
+            _ctx.RichiestaFerie.Add(richiesta);
+            _ctx.SaveChanges();
+
+            return Ok();
+        }
+
+        // =========================
+        // POST – modifica richiesta
+        // =========================
+        [HttpPost]
+        public virtual IActionResult Update([FromBody] RichiestaFerieDTO dto)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var dip = _ctx.Dipendenti.FirstOrDefault(d => d.UserId.ToString() == userId);
+            if (dip == null) return Unauthorized();
+
+            var richiesta = _ctx.RichiestaFerie
+                .FirstOrDefault(r => r.Id == dto.id && r.DipendenteId == dip.Id);
+
+            if (richiesta == null)
+                return NotFound();
+
+            if (richiesta.Stato != FerieStato.InAttesa)
+                return BadRequest();
+
+            if (!DateTime.TryParse(dto.dal, out var inizio))
+                return BadRequest();
+
+            DateTime fine;
+            if (richiesta.Tipo == "Permesso")
+                fine = inizio;
+            else if (!DateTime.TryParse(dto.al, out fine))
+                return BadRequest();
+
+            richiesta.DataInizio = inizio;
+            richiesta.DataFine = fine;
+            richiesta.Motivo = dto.motivo;
+
+            _ctx.SaveChanges();
+            return Ok();
+        }
+
+        // =========================
+        // POST – elimina richiesta
+        // =========================
+        [HttpPost]
+        public virtual IActionResult Delete([FromBody] int id)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var dip = _ctx.Dipendenti.FirstOrDefault(d => d.UserId.ToString() == userId);
+            if (dip == null) return Unauthorized();
+
+            var richiesta = _ctx.RichiestaFerie
+                .FirstOrDefault(r => r.Id == id && r.DipendenteId == dip.Id);
+
+            if (richiesta == null)
+                return NotFound();
+
+            _ctx.RichiestaFerie.Remove(richiesta);
+            _ctx.SaveChanges();
+
+            return Ok();
+        }
+    }
+}
