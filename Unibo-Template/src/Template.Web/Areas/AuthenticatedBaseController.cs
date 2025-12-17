@@ -1,30 +1,31 @@
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication;
+using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
-using System.Linq;
-using Template.Services;
 using Template.Services.Shared;
+using System.Security.Claims;
+using Template.Services;
+using System.Linq;
 
 namespace Template.Web.Areas.Auth
 {
     [Area("Auth")]
-    public class AuthController : Controller
+    public partial class AuthController : Controller
     {
         private readonly TemplateDbContext _context;
 
-        public AuthController(TemplateDbContext context)
+        public  AuthController(TemplateDbContext context)
         {
             _context = context;
         }
 
-        public IActionResult Login()
+        public virtual IActionResult Login()
         {
             return View();
         }
 
         [HttpPost]
-        public IActionResult Login(string email, string password)
+        public virtual IActionResult Login(string email, string password)
         {
             var user = _context.Users.FirstOrDefault(u => u.Email == email);
 
@@ -61,7 +62,7 @@ namespace Template.Web.Areas.Auth
             return RedirectToAction("Dashboard", "Dipendente", new { area = "Dipendente" });
         }
 
-        public IActionResult Logout()
+        public virtual  IActionResult Logout()
         {
             HttpContext.SignOutAsync();
             return RedirectToAction("Login");
