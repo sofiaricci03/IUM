@@ -28,6 +28,7 @@ namespace Template.Services
 
         public DbSet<RichiestaFerie> RichiestaFerie { get; set; }
 
+        public DbSet<RendicontazioneMensile> RendicontazioniMensili { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

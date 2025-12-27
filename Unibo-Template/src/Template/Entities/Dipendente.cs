@@ -21,5 +21,7 @@ namespace Template.Entities
         public int FerieResidue { get; set; }
         public int PermessiResidui { get; set; }
         public int GiorniMalattiaDisponibili { get; set; }
+        public byte[]? ProfileImage { get; set; }
+        public string? ProfileImageContentType { get; set; }
     }
 }
