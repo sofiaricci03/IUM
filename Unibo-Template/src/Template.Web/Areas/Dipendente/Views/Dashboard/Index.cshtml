@@ -14,46 +14,40 @@
     <div class="row">
         <!-- SIDEBAR ONIT -->
         <div class="col-2 onit-sidebar">
-            <div class="onit-sidebar-user">
-                <div class="fw-bold">@Model.NomeCompleto</div>
-                <small class="text-muted">@Model.Email</small>
-            </div>
-
             <ul class="onit-sidebar-menu">
                 <li>
-                    <a class="active"
-                       asp-area="Dipendente"
-                       asp-controller="Dashboard"
-                       asp-action="Index">
+                    <a asp-area="Dipendente"
+                    asp-controller="Dashboard"
+                    asp-action="Index">
                         <i class="fa-solid fa-calendar-check"></i> Attività
                     </a>
                 </li>
                 <li>
                     <a asp-area="Dipendente"
-                       asp-controller="Rendicontazione"
-                       asp-action="Index">
-                        <i class="fa-solid fa-clipboard-list"></i> Rendicontazione settimanale
+                    asp-controller="Progetti"
+                    asp-action="Index">
+                        <i class="fa-solid fa-diagram-project"></i> Progetti
+                    </a>
+                </li>
+                <li>
+                    <a asp-area="Dipendente"
+                    asp-controller="Rendicontazione"
+                    asp-action="Index">
+                        <i class="fa-solid fa-clipboard-list"></i> Rendicontazione
                     </a>
                 </li>
                 <li>
                     <a asp-area="Dipendente"
                     asp-controller="Congedo"
                     asp-action="Index">
-                    <i class="fa-solid fa-plane-departure"></i> Congedo
+                        <i class="fa-solid fa-plane-departure"></i> Congedo
                     </a>
                 </li>
                 <li>
                     <a asp-area="Dipendente"
-                       asp-controller="Contratto"
-                       asp-action="Index">
+                    asp-controller="Contratto"
+                    asp-action="Index">
                         <i class="fa-solid fa-file-contract"></i> Contratto
-                    </a>
-                </li>
-                <li>
-                    <a asp-area="Dipendente"
-                       asp-controller="Progetti"
-                       asp-action="Index">
-                        <i class="fa-solid fa-diagram-project"></i> Progetti
                     </a>
                 </li>
             </ul>
@@ -114,14 +108,23 @@
                 </p>
 
                 <div class="row mb-3">
-                    <div class="col-6">
+                    <div class="col-4">
                         <label class="onit-label-required">Orario inizio</label>
-                        <input id="oraInizio" type="time" class="form-control" />
+                        <input id="oraInizio" type="time" class="form-control" step="900" />
+                        <small class="text-muted">Intervalli di 15 min</small>
                     </div>
 
-                    <div class="col-6">
+                    <div class="col-4">
                         <label class="onit-label-required">Orario fine</label>
-                        <input id="oraFine" type="time" class="form-control" />
+                        <input id="oraFine" type="time" class="form-control" step="900" />
+                        <small class="text-muted">Intervalli di 15 min</small>
+                    </div>
+                    
+                    <div class="col-4">
+                        <label>Durata</label>
+                        <div class="form-control-plaintext">
+                            <strong id="totaleDurata" class="text-success"></strong>
+                        </div>
                     </div>
                 </div>
 
@@ -181,6 +184,41 @@
 
 @section styles {
     <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet" />
+    
+    <style>
+        /* Migliora visualizzazione eventi */
+        .fc-event {
+            border-radius: 4px;
+            padding: 2px 4px;
+            font-size: 0.85rem;
+            cursor: pointer;
+        }
+        
+        .fc-event:hover {
+            opacity: 0.8;
+            transform: scale(1.02);
+            transition: all 0.2s;
+        }
+        
+        /* Giorni con totale ore */
+        .fc-daygrid-day.fc-day-today {
+            background-color: #fff3cd !important;
+        }
+        
+        .day-total-hours {
+            z-index: 3;
+        }
+        
+        /* Modale migliorata */
+        .onit-label-required::after {
+            content: " *";
+            color: #dc3545;
+        }
+        
+        #totaleDurata {
+            font-size: 1.2rem;
+        }
+    </style>
 }
 
 @section scripts {

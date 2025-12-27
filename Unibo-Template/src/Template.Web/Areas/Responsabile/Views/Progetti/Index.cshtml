@@ -1,0 +1,508 @@
+@model Template.Web.Areas.Responsabile.Controllers.ProgettiIndexViewModel
+@{
+    ViewData["Title"] = "Gestione Progetti – Dashboard Responsabile";
+}
+
+@section pageTitle {
+    <div class="onit-page-title">
+        <h1><i class="fa-solid fa-diagram-project"></i> Progetti</h1>
+    </div>
+}
+
+<div class="container-fluid onit-page-content">
+
+    <div class="row">
+
+        <!-- SIDEBAR RESPONSABILE -->
+        <div class="col-2 onit-sidebar">
+            <ul class="onit-sidebar-menu">
+                <li>
+                    <a asp-area="Responsabile"
+                    asp-controller="Dashboard"
+                    asp-action="Index">
+                        <i class="fa-solid fa-calendar-check"></i> Attività
+                    </a>
+                </li>
+                <li>
+                    <a asp-area="Responsabile"
+                    asp-controller="Progetti"
+                    asp-action="Index">
+                        <i class="fa-solid fa-diagram-project"></i> Progetti
+                    </a>
+                </li>
+                <li>
+                    <a asp-area="Responsabile"
+                    asp-controller="Rendicontazione"
+                    asp-action="Index">
+                        <i class="fa-solid fa-clipboard-list"></i> Rendicontazione
+                    </a>
+                </li>
+                <li>
+                    <a asp-area="Responsabile"
+                    asp-controller="Congedo"
+                    asp-action="Index">
+                        <i class="fa-solid fa-plane-departure"></i> Congedo
+                    </a>
+                </li>
+                <li>
+                    <a asp-area="Responsabile"
+                    asp-controller="Contratto"
+                    asp-action="Index">
+                        <i class="fa-solid fa-file-contract"></i> Contratto
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- MAIN CONTENT -->
+        <div class="col-10">
+
+            <!-- Toolbar -->
+            <div class="onit-toolbar d-flex justify-content-between align-items-center mb-3">
+                <h3 class="fw-bold mb-0">Gestione Progetti Aziendali</h3>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modaleProgetto">
+                    <i class="fa-solid fa-plus"></i> Nuovo Progetto
+                </button>
+            </div>
+
+            <!-- Filtri -->
+            <div class="onit-card p-3 mb-3">
+                <div class="row align-items-end">
+                    <div class="col-md-4">
+                        <label class="form-label">Cerca progetto</label>
+                        <input type="text" id="searchInput" class="form-control" placeholder="Nome o cliente...">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Stato</label>
+                        <select id="filtroStato" class="form-select">
+                            <option value="">Tutti</option>
+                            <option value="attivi">In corso</option>
+                            <option value="completati">Completati</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Ordinamento</label>
+                        <select id="ordinamento" class="form-select">
+                            <option value="recente">Più recenti</option>
+                            <option value="scadenza">Per scadenza</option>
+                            <option value="cliente">Per cliente</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button class="btn btn-secondary w-100" onclick="resetFiltri()">
+                            <i class="fa-solid fa-rotate-right"></i> Reset
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lista Progetti -->
+            <div class="row" id="progettiContainer">
+                @if (Model.Progetti != null && Model.Progetti.Any())
+                {
+                    @foreach (var progetto in Model.Progetti)
+                    {
+                        <div class="col-md-6 mb-3 progetto-card" 
+                             data-cliente="@progetto.Cliente.ToLower()" 
+                             data-nome="@progetto.Nome.ToLower()"
+                             data-completato="@progetto.Completato.ToString().ToLower()">
+                            <div class="onit-card p-3 h-100">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <h5 class="mb-0">
+                                        <i class="fa-solid fa-briefcase text-primary"></i> @progetto.Nome
+                                    </h5>
+                                    @if (progetto.Completato)
+                                    {
+                                        <span class="badge bg-success">
+                                            <i class="fa-solid fa-circle-check"></i> Completato
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        var oggi = DateTime.Now.Date;
+                                        var scadenza = progetto.DataScadenza.Date;
+                                        var giorniMancanti = (scadenza - oggi).Days;
+                                        
+                                        if (giorniMancanti < 0)
+                                        {
+                                            <span class="badge bg-danger badge-scaduto">
+                                                <i class="fa-solid fa-circle-exclamation"></i> Scaduto
+                                            </span>
+                                        }
+                                        else if (giorniMancanti <= 7)
+                                        {
+                                            <span class="badge bg-warning text-dark">
+                                                <i class="fa-solid fa-clock"></i> In scadenza (@giorniMancanti gg)
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-info">
+                                                <i class="fa-solid fa-circle-play"></i> In corso
+                                            </span>
+                                        }
+                                    }
+                                </div>
+
+                                <p class="text-muted mb-2">
+                                    <i class="fa-solid fa-building"></i> <strong>Cliente:</strong> @progetto.Cliente
+                                </p>
+
+                                @if (!string.IsNullOrEmpty(progetto.Descrizione))
+                                {
+                                    <p class="small text-secondary mb-2">@progetto.Descrizione</p>
+                                }
+
+                                <div class="row mt-2 small">
+                                    <div class="col-6">
+                                        <i class="fa-solid fa-calendar-plus"></i> 
+                                        <strong>Inizio:</strong> @progetto.DataInizio.ToString("dd/MM/yyyy")
+                                    </div>
+                                    <div class="col-6">
+                                        <i class="fa-solid fa-calendar-xmark"></i> 
+                                        <strong>Scadenza:</strong> @progetto.DataScadenza.ToString("dd/MM/yyyy")
+                                    </div>
+                                </div>
+
+                                @if (!string.IsNullOrEmpty(progetto.ReferenteInterno))
+                                {
+                                    <p class="small mt-2 mb-0">
+                                        <i class="fa-solid fa-user"></i> <strong>Ref. Interno:</strong> @progetto.ReferenteInterno
+                                    </p>
+                                }
+
+                                <div class="mt-3 d-flex gap-2">
+                                    <button class="btn btn-sm btn-outline-primary" onclick="modificaProgetto(@progetto.Id)">
+                                        <i class="fa-solid fa-pen-to-square"></i> Modifica
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger" onclick="eliminaProgetto(@progetto.Id, '@progetto.Nome')">
+                                        <i class="fa-solid fa-trash"></i> Elimina
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="col-12">
+                        <div class="onit-card p-5 text-center">
+                            <i class="fa-solid fa-folder-open fa-3x text-muted mb-3"></i>
+                            <h4>Nessun progetto trovato</h4>
+                            <p class="text-muted">Inizia creando il tuo primo progetto aziendale</p>
+                            <button class="btn btn-primary mt-2" data-bs-toggle="modal" data-bs-target="#modaleProgetto">
+                                <i class="fa-solid fa-plus"></i> Crea Progetto
+                            </button>
+                        </div>
+                    </div>
+                }
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+<!-- MODALE NUOVO/MODIFICA PROGETTO -->
+<div class="modal fade" id="modaleProgetto" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content onit-card">
+
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fa-solid fa-diagram-project"></i> 
+                    <span id="modaleTitolo">Nuovo Progetto</span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+
+                <input type="hidden" id="progettoId" value="0">
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="onit-label-required">Nome Progetto</label>
+                        <input id="nomeProgetto" type="text" class="form-control" placeholder="Es: Sviluppo App Mobile">
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="onit-label-required">Cliente/Azienda</label>
+                        <input id="clienteProgetto" type="text" class="form-control" placeholder="Es: Acme Inc.">
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label>Descrizione Progetto</label>
+                    <textarea id="descrizioneProgetto" class="form-control" rows="3" 
+                              placeholder="Descrizione dettagliata del progetto..."></textarea>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="onit-label-required">Data Inizio</label>
+                        <input id="dataInizioProgetto" type="date" class="form-control">
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="onit-label-required">Data Scadenza</label>
+                        <input id="dataScadenzaProgetto" type="date" class="form-control">
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label>Referente Cliente</label>
+                        <input id="referenteCliente" type="text" class="form-control" placeholder="Nome contatto cliente">
+                    </div>
+
+                    <div class="col-md-6">
+                        <label>Referente Interno</label>
+                        <input id="referenteInterno" type="text" class="form-control" placeholder="Project Manager interno">
+                    </div>
+                </div>
+
+                <div class="form-check" id="completatoCheckContainer" style="display:none;">
+                    <input class="form-check-input" type="checkbox" id="completatoCheck">
+                    <label class="form-check-label" for="completatoCheck">
+                        Progetto completato
+                    </label>
+                </div>
+
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
+                <button id="btnSalvaProgetto" class="btn btn-primary" onclick="salvaProgetto()">
+                    <i class="fa-solid fa-save"></i> Salva Progetto
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@section scripts {
+<script>
+    // Variabile per tracciare se stiamo modificando
+    let isModifica = false;
+
+    // Funzione per resettare il form
+    function resetForm() {
+        document.getElementById('progettoId').value = '0';
+        document.getElementById('nomeProgetto').value = '';
+        document.getElementById('clienteProgetto').value = '';
+        document.getElementById('descrizioneProgetto').value = '';
+        document.getElementById('dataInizioProgetto').value = '';
+        document.getElementById('dataScadenzaProgetto').value = '';
+        document.getElementById('referenteCliente').value = '';
+        document.getElementById('referenteInterno').value = '';
+        document.getElementById('completatoCheck').checked = false;
+        document.getElementById('completatoCheckContainer').style.display = 'none';
+        document.getElementById('modaleTitolo').textContent = 'Nuovo Progetto';
+        isModifica = false;
+    }
+
+    // Reset form quando si apre la modale per nuovo progetto
+    document.getElementById('modaleProgetto').addEventListener('show.bs.modal', function (event) {
+        // Se il click proviene dal bottone "Nuovo Progetto", resetta il form
+        if (!isModifica) {
+            resetForm();
+        }
+    });
+
+    // Funzione per salvare progetto
+    async function salvaProgetto() {
+        const id = parseInt(document.getElementById('progettoId').value);
+        const nome = document.getElementById('nomeProgetto').value.trim();
+        const cliente = document.getElementById('clienteProgetto').value.trim();
+        const descrizione = document.getElementById('descrizioneProgetto').value.trim();
+        const dataInizio = document.getElementById('dataInizioProgetto').value;
+        const dataScadenza = document.getElementById('dataScadenzaProgetto').value;
+        const referenteCliente = document.getElementById('referenteCliente').value.trim();
+        const referenteInterno = document.getElementById('referenteInterno').value.trim();
+        const completato = document.getElementById('completatoCheck').checked;
+
+        // Validazione
+        if (!nome || !cliente || !dataInizio || !dataScadenza) {
+            alert('Compila tutti i campi obbligatori');
+            return;
+        }
+
+        const data = {
+            id: id,
+            nome: nome,
+            cliente: cliente,
+            descrizione: descrizione,
+            dataInizio: dataInizio,
+            dataScadenza: dataScadenza,
+            referenteCliente: referenteCliente,
+            referenteInterno: referenteInterno,
+            completato: completato
+        };
+
+        try {
+            let url, method;
+            if (id > 0) {
+                url = '@Url.Action("Aggiorna", "Progetti", new { area = "Responsabile" })';
+                method = 'PUT';
+            } else {
+                url = '@Url.Action("Crea", "Progetti", new { area = "Responsabile" })';
+                method = 'POST';
+            }
+
+            const response = await fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            });
+
+            if (response.ok) {
+                // Chiudi modale e ricarica pagina
+                bootstrap.Modal.getInstance(document.getElementById('modaleProgetto')).hide();
+                window.location.reload();
+            } else {
+                alert('Errore nel salvare il progetto');
+            }
+        } catch (error) {
+            console.error('Errore:', error);
+            alert('Errore nel salvare il progetto');
+        }
+    }
+
+    // Funzione per modificare progetto
+    async function modificaProgetto(id) {
+        try {
+            const response = await fetch(`@Url.Action("Lista", "Progetti", new { area = "Responsabile" })`);
+            const progetti = await response.json();
+            const progetto = progetti.find(p => p.id === id);
+
+            if (progetto) {
+                isModifica = true;
+                document.getElementById('progettoId').value = progetto.id;
+                document.getElementById('nomeProgetto').value = progetto.nome;
+                document.getElementById('clienteProgetto').value = progetto.cliente;
+                document.getElementById('descrizioneProgetto').value = progetto.descrizione || '';
+                document.getElementById('dataInizioProgetto').value = progetto.dataInizio;
+                document.getElementById('dataScadenzaProgetto').value = progetto.dataScadenza;
+                document.getElementById('referenteCliente').value = progetto.referenteCliente || '';
+                document.getElementById('referenteInterno').value = progetto.referenteInterno || '';
+                document.getElementById('completatoCheck').checked = progetto.completato;
+                document.getElementById('completatoCheckContainer').style.display = 'block';
+                document.getElementById('modaleTitolo').textContent = 'Modifica Progetto';
+
+                new bootstrap.Modal(document.getElementById('modaleProgetto')).show();
+            }
+        } catch (error) {
+            console.error('Errore:', error);
+            alert('Errore nel caricare i dati del progetto');
+        }
+    }
+
+    // Funzione per eliminare progetto
+    async function eliminaProgetto(id, nome) {
+        if (!confirm(`Sei sicuro di voler eliminare il progetto "${nome}"?`)) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`@Url.Action("Elimina", "Progetti", new { area = "Responsabile" })?id=${id}`, {
+                method: 'DELETE'
+            });
+
+            if (response.ok) {
+                window.location.reload();
+            } else {
+                alert('Errore nell\'eliminazione del progetto');
+            }
+        } catch (error) {
+            console.error('Errore:', error);
+            alert('Errore nell\'eliminazione del progetto');
+        }
+    }
+
+    // Filtro ricerca
+    document.getElementById('searchInput').addEventListener('input', filtraProgetti);
+    document.getElementById('filtroStato').addEventListener('change', filtraProgetti);
+
+    function filtraProgetti() {
+        const search = document.getElementById('searchInput').value.toLowerCase();
+        const stato = document.getElementById('filtroStato').value;
+        const cards = document.querySelectorAll('.progetto-card');
+
+        cards.forEach(card => {
+            const nome = card.getAttribute('data-nome');
+            const cliente = card.getAttribute('data-cliente');
+            const completato = card.getAttribute('data-completato') === 'true';
+
+            let showSearch = search === '' || nome.includes(search) || cliente.includes(search);
+            let showStato = true;
+
+            if (stato === 'attivi') {
+                showStato = !completato;
+            } else if (stato === 'completati') {
+                showStato = completato;
+            }
+
+            card.style.display = (showSearch && showStato) ? '' : 'none';
+        });
+    }
+
+    function resetFiltri() {
+        document.getElementById('searchInput').value = '';
+        document.getElementById('filtroStato').value = '';
+        filtraProgetti();
+    }
+</script>
+}
+
+@section styles {
+<style>
+    .progetto-card {
+        transition: transform 0.2s;
+    }
+
+    .progetto-card:hover {
+        transform: translateY(-2px);
+    }
+
+    .onit-label-required::after {
+        content: " *";
+        color: #dc3545;
+    }
+    
+    /* Badge stati progetto */
+    .badge.bg-danger {
+        background-color: #dc3545 !important;
+    }
+    
+    .badge.bg-warning {
+        background-color: #ffc107 !important;
+        color: #000 !important;
+    }
+    
+    .badge.bg-info {
+        background-color: #0dcaf0 !important;
+    }
+    
+    .badge.bg-success {
+        background-color: #28a745 !important;
+    }
+    
+    /* Animazione per progetti scaduti */
+    .badge-scaduto {
+        animation: pulse-scaduto 2s infinite;
+    }
+    
+    @@keyframes pulse-scaduto {
+        0%, 100% { 
+            box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7);
+        }
+        50% { 
+            box-shadow: 0 0 0 8px rgba(220, 53, 69, 0);
+        }
+    }
+</style>
+}

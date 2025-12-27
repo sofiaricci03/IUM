@@ -1,6 +1,6 @@
-@model Template.Web.Areas.Dipendente.Controllers.DipendenteDashboardViewModel
+@model Template.Web.Areas.Responsabile.Controllers.ResponsabileDashboardViewModel
 @{
-    ViewData["Title"] = "Attività – Dashboard Dipendente";
+    ViewData["Title"] = "Attività – Dashboard Responsabile";
 }
 
 @section pageTitle {
@@ -13,45 +13,42 @@
 
     <div class="row">
 
-        <!-- SIDEBAR -->
+        <!-- SIDEBAR RESPONSABILE -->
         <div class="col-2 onit-sidebar">
-
-            <div class="onit-sidebar-user">
-                <div class="fw-bold">@Model.NomeCompleto</div>
-                <small class="text-muted">@Model.Email</small>
-            </div>
-
             <ul class="onit-sidebar-menu">
                 <li>
-                    <a class="active"
-                       asp-area="Dipendente"
-                       asp-controller="Dashboard"
-                       asp-action="Index">
+                    <a asp-area="Responsabile"
+                    asp-controller="Dashboard"
+                    asp-action="Index">
                         <i class="fa-solid fa-calendar-check"></i> Attività
                     </a>
                 </li>
-
                 <li>
-                    <a asp-area="Dipendente"
-                       asp-controller="Rendicontazione"
-                       asp-action="Index">
-                        <i class="fa-solid fa-clipboard-list"></i> Rendicontazione settimanale
-                    </a>
-                </li>
-
-                <li>
-                    <a asp-area="Dipendente"
-                       asp-controller="Contratto"
-                       asp-action="Index">
-                        <i class="fa-solid fa-file-contract"></i> Contratto
-                    </a>
-                </li>
-
-                <li>
-                    <a asp-area="Dipendente"
-                       asp-controller="Progetti"
-                       asp-action="Index">
+                    <a asp-area="Responsabile"
+                    asp-controller="Progetti"
+                    asp-action="Index">
                         <i class="fa-solid fa-diagram-project"></i> Progetti
+                    </a>
+                </li>
+                <li>
+                    <a asp-area="Responsabile"
+                    asp-controller="Rendicontazione"
+                    asp-action="Index">
+                        <i class="fa-solid fa-clipboard-list"></i> Rendicontazione
+                    </a>
+                </li>
+                <li>
+                    <a asp-area="Responsabile"
+                    asp-controller="Congedo"
+                    asp-action="Index">
+                        <i class="fa-solid fa-plane-departure"></i> Congedo
+                    </a>
+                </li>
+                <li>
+                    <a asp-area="Responsabile"
+                    asp-controller="Contratto"
+                    asp-action="Index">
+                        <i class="fa-solid fa-file-contract"></i> Contratto
                     </a>
                 </li>
             </ul>
@@ -70,25 +67,17 @@
                     <button id="btnMese" class="btn btn-primary">Mese</button>
                 </div>
 
-                <!-- Titolo mese -->
-                <h3 class="fw-bold" id="titleCalendar"></h3>
+                <!-- Titolo -->
+                <h3 class="fw-bold" id="titleCalendar">Calendario Attività</h3>
 
-                <!-- Navigazione + Zoom -->
-                <div class="d-flex align-items-center">
-                    <div class="btn-group me-3">
-                        <button id="prevBtn" class="btn btn-outline-secondary">
-                            <i class="fa-solid fa-chevron-left"></i>
-                        </button>
-                        <button id="nextBtn" class="btn btn-outline-secondary">
-                            <i class="fa-solid fa-chevron-right"></i>
-                        </button>
-                    </div>
-
-                    <!-- SLIDER ZOOM -->
-                    <div class="d-flex align-items-center">
-                        <label class="me-2"><i class="fa-solid fa-magnifying-glass"></i></label>
-                        <input id="zoomSlider" type="range" min="5" max="40" value="10" step="1" />
-                    </div>
+                <!-- Navigazione -->
+                <div class="btn-group">
+                    <button id="prevBtn" class="btn btn-outline-secondary">
+                        <i class="fa-solid fa-chevron-left"></i>
+                    </button>
+                    <button id="nextBtn" class="btn btn-outline-secondary">
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </button>
                 </div>
 
             </div>
@@ -112,24 +101,141 @@
         <div class="modal-content onit-card">
 
             <div class="modal-header">
-                <h5 class="modal-title"><i class="fa-solid fa-pen-to-square"></i> Attività</h5>
+                <h5 class="modal-title"><i class="fa-solid fa-pen-to-square"></i> Inserisci attività</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
 
             <div class="modal-body">
 
-                <!-- Data selezionata -->
-                <h6 class="fw-bold mb-3">Data: <span id="dataSelezionata"></span></h6>
+                <p class="fw-bold mb-3">
+                    Giorno selezionato: <span id="dataSelezionata" class="text-primary"></span>
+                </p>
 
-                <div class="row">
+                <div class="row mb-3">
                     <div class="col-6">
                         <label class="onit-label-required">Orario inizio</label>
-                        <input id="oraInizio" type="time" class="form-control mb-3" />
+                        <select id="oraInizio" class="form-select">
+                            <option value="06:00">06:00</option>
+                            <option value="06:15">06:15</option>
+                            <option value="06:30">06:30</option>
+                            <option value="06:45">06:45</option>
+                            <option value="07:00">07:00</option>
+                            <option value="07:15">07:15</option>
+                            <option value="07:30">07:30</option>
+                            <option value="07:45">07:45</option>
+                            <option value="08:00">08:00</option>
+                            <option value="08:15">08:15</option>
+                            <option value="08:30">08:30</option>
+                            <option value="08:45">08:45</option>
+                            <option value="09:00" selected>09:00</option>
+                            <option value="09:15">09:15</option>
+                            <option value="09:30">09:30</option>
+                            <option value="09:45">09:45</option>
+                            <option value="10:00">10:00</option>
+                            <option value="10:15">10:15</option>
+                            <option value="10:30">10:30</option>
+                            <option value="10:45">10:45</option>
+                            <option value="11:00">11:00</option>
+                            <option value="11:15">11:15</option>
+                            <option value="11:30">11:30</option>
+                            <option value="11:45">11:45</option>
+                            <option value="12:00">12:00</option>
+                            <option value="12:15">12:15</option>
+                            <option value="12:30">12:30</option>
+                            <option value="12:45">12:45</option>
+                            <option value="13:00">13:00</option>
+                            <option value="13:15">13:15</option>
+                            <option value="13:30">13:30</option>
+                            <option value="13:45">13:45</option>
+                            <option value="14:00">14:00</option>
+                            <option value="14:15">14:15</option>
+                            <option value="14:30">14:30</option>
+                            <option value="14:45">14:45</option>
+                            <option value="15:00">15:00</option>
+                            <option value="15:15">15:15</option>
+                            <option value="15:30">15:30</option>
+                            <option value="15:45">15:45</option>
+                            <option value="16:00">16:00</option>
+                            <option value="16:15">16:15</option>
+                            <option value="16:30">16:30</option>
+                            <option value="16:45">16:45</option>
+                            <option value="17:00">17:00</option>
+                            <option value="17:15">17:15</option>
+                            <option value="17:30">17:30</option>
+                            <option value="17:45">17:45</option>
+                            <option value="18:00">18:00</option>
+                            <option value="18:15">18:15</option>
+                            <option value="18:30">18:30</option>
+                            <option value="18:45">18:45</option>
+                            <option value="19:00">19:00</option>
+                            <option value="19:15">19:15</option>
+                            <option value="19:30">19:30</option>
+                            <option value="19:45">19:45</option>
+                            <option value="20:00">20:00</option>
+                        </select>
                     </div>
 
                     <div class="col-6">
                         <label class="onit-label-required">Orario fine</label>
-                        <input id="oraFine" type="time" class="form-control mb-3" />
+                        <select id="oraFine" class="form-select">
+                            <option value="06:00">06:00</option>
+                            <option value="06:15">06:15</option>
+                            <option value="06:30">06:30</option>
+                            <option value="06:45">06:45</option>
+                            <option value="07:00">07:00</option>
+                            <option value="07:15">07:15</option>
+                            <option value="07:30">07:30</option>
+                            <option value="07:45">07:45</option>
+                            <option value="08:00">08:00</option>
+                            <option value="08:15">08:15</option>
+                            <option value="08:30">08:30</option>
+                            <option value="08:45">08:45</option>
+                            <option value="09:00">09:00</option>
+                            <option value="09:15">09:15</option>
+                            <option value="09:30">09:30</option>
+                            <option value="09:45">09:45</option>
+                            <option value="10:00">10:00</option>
+                            <option value="10:15">10:15</option>
+                            <option value="10:30">10:30</option>
+                            <option value="10:45">10:45</option>
+                            <option value="11:00">11:00</option>
+                            <option value="11:15">11:15</option>
+                            <option value="11:30">11:30</option>
+                            <option value="11:45">11:45</option>
+                            <option value="12:00">12:00</option>
+                            <option value="12:15">12:15</option>
+                            <option value="12:30">12:30</option>
+                            <option value="12:45">12:45</option>
+                            <option value="13:00">13:00</option>
+                            <option value="13:15">13:15</option>
+                            <option value="13:30">13:30</option>
+                            <option value="13:45">13:45</option>
+                            <option value="14:00">14:00</option>
+                            <option value="14:15">14:15</option>
+                            <option value="14:30">14:30</option>
+                            <option value="14:45">14:45</option>
+                            <option value="15:00">15:00</option>
+                            <option value="15:15">15:15</option>
+                            <option value="15:30">15:30</option>
+                            <option value="15:45">15:45</option>
+                            <option value="16:00">16:00</option>
+                            <option value="16:15">16:15</option>
+                            <option value="16:30">16:30</option>
+                            <option value="16:45">16:45</option>
+                            <option value="17:00">17:00</option>
+                            <option value="17:15">17:15</option>
+                            <option value="17:30">17:30</option>
+                            <option value="17:45">17:45</option>
+                            <option value="18:00" selected>18:00</option>
+                            <option value="18:15">18:15</option>
+                            <option value="18:30">18:30</option>
+                            <option value="18:45">18:45</option>
+                            <option value="19:00">19:00</option>
+                            <option value="19:15">19:15</option>
+                            <option value="19:30">19:30</option>
+                            <option value="19:45">19:45</option>
+                            <option value="20:00">20:00</option>
+                        </select>
                     </div>
                 </div>
 
@@ -142,30 +248,31 @@
                 <label class="onit-label-required">Attività</label>
                 <input id="attivita" class="form-control mb-3" />
 
-                <label>Descrizione (opzionale)</label>
-                <textarea id="descrizione" class="form-control mb-3"></textarea>
+                <label>Descrizione</label>
+                <textarea id="descrizione" class="form-control mb-4"></textarea>
 
-                <!-- Trasferta -->
-                <div class="form-check mb-3">
+                <!-- SWITCH TRASFERTA -->
+                <div class="form-check form-switch mb-3">
                     <input class="form-check-input" type="checkbox" id="checkTrasferta">
-                    <label class="form-check-label">Attività in trasferta</label>
+                    <label class="form-check-label" for="checkTrasferta">Trasferta</label>
                 </div>
 
+                <!-- SEZIONE COSTI TRASFERTA -->
                 <div id="boxTrasferta" style="display:none">
-                    <label class="fw-bold">Spese trasferta</label>
+                    <label class="fw-bold mb-2">Spese Trasferta (€)</label>
 
-                    <div class="row mt-2">
+                    <div class="row">
                         <div class="col-4">
-                            <label>Trasporto (€)</label>
-                            <input id="spesaTrasporto" type="number" class="form-control mb-2" />
+                            <label>Trasporto</label>
+                            <input id="spesaTrasporto" type="number" min="0" class="form-control mb-2" />
                         </div>
                         <div class="col-4">
-                            <label>Vitto (€)</label>
-                            <input id="spesaVitto" type="number" class="form-control mb-2" />
+                            <label>Vitto</label>
+                            <input id="spesaVitto" type="number" min="0" class="form-control mb-2" />
                         </div>
                         <div class="col-4">
-                            <label>Alloggio (€)</label>
-                            <input id="spesaAlloggio" type="number" class="form-control mb-2" />
+                            <label>Alloggio</label>
+                            <input id="spesaAlloggio" type="number" min="0" class="form-control mb-2" />
                         </div>
                     </div>
                 </div>
@@ -173,9 +280,12 @@
             </div>
 
             <div class="modal-footer">
+                <button id="btnElimina" class="btn btn-danger me-auto" style="display:none">
+                    Elimina
+                </button>
+
                 <button class="btn btn-secondary" data-bs-dismiss="modal">Chiudi</button>
                 <button id="btnSalva" class="btn btn-primary">Salva</button>
-                <button id="btnElimina" class="btn btn-danger me-auto" style="display:none;">Elimina</button>
             </div>
 
         </div>
@@ -185,27 +295,49 @@
 
 @section styles {
     <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet" />
-
+    
     <style>
-        #zoomSlider {
-            width: 120px;
-            accent-color: #007bff;
+        /* Migliora visualizzazione eventi */
+        .fc-event {
+            border-radius: 4px;
+            padding: 2px 4px;
+            font-size: 0.85rem;
             cursor: pointer;
         }
-
-        :root {
-            --zoom-padding: 10px;
+        
+        .fc-event:hover {
+            opacity: 0.8;
+            transform: scale(1.02);
+            transition: all 0.2s;
         }
-
-        .fc-daygrid-day-frame {
-            padding-top: var(--zoom-padding) !important;
-            padding-bottom: var(--zoom-padding) !important;
-            transition: padding 0.15s ease-in-out;
+        
+        /* Giorni con totale ore */
+        .fc-daygrid-day.fc-day-today {
+            background-color: #fff3cd !important;
+        }
+        
+        .day-total-hours {
+            z-index: 3;
+        }
+        
+        /* Modale migliorata */
+        .onit-label-required::after {
+            content: " *";
+            color: #dc3545;
         }
     </style>
 }
 
 @section scripts {
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+
+    <script>
+        document.getElementById("checkTrasferta").addEventListener("change", function () {
+            document.getElementById("boxTrasferta").style.display =
+                this.checked ? "block" : "none";
+        });
+
+    </script>
+
     <script src="~/js/dashboard-calendar.js"></script>
 }

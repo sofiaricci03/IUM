@@ -1,8 +1,49 @@
 // =============================================================
-//  FullCalendar + Popup attività + API reali
+//  FullCalendar + Popup attività + API reali - VERSIONE DINAMICA
 // =============================================================
 
 let calendar;
+
+// Detect current area (Dipendente or Responsabile)
+const currentArea = window.location.pathname.includes('/Responsabile/') ? 'Responsabile' : 'Dipendente';
+
+// ----------------------
+//  FUNZIONE: Arrotonda a 15 minuti
+// ----------------------
+function roundToQuarter(time) {
+    if (!time) return '';
+    const [hours, minutes] = time.split(':');
+    const roundedMinutes = Math.round(parseInt(minutes) / 15) * 15;
+    const finalMinutes = roundedMinutes === 60 ? 0 : roundedMinutes;
+    const finalHours = roundedMinutes === 60 ? (parseInt(hours) + 1) % 24 : parseInt(hours);
+    return `${String(finalHours).padStart(2, '0')}:${String(finalMinutes).padStart(2, '0')}`;
+}
+
+// ----------------------
+//  FUNZIONE: Calcola durata in ore
+// ----------------------
+function calcolaDurata(start, end) {
+    if (!start || !end) return 0;
+    const [h1, m1] = start.split(':').map(Number);
+    const [h2, m2] = end.split(':').map(Number);
+    const minuti = (h2 * 60 + m2) - (h1 * 60 + m1);
+    return (minuti / 60).toFixed(2);
+}
+
+// ----------------------
+//  FUNZIONE: Colore per progetto
+// ----------------------
+function getColorForProject(projectName) {
+    const colors = [
+        '#3788d8', '#28a745', '#fd7e14', '#6f42c1', 
+        '#e83e8c', '#20c997', '#17a2b8', '#ffc107'
+    ];
+    let hash = 0;
+    for (let i = 0; i < projectName.length; i++) {
+        hash = projectName.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    return colors[Math.abs(hash) % colors.length];
+}
 
 // ----------------------
 //  FUNZIONE UTILE: format orari senza UTC
@@ -30,8 +71,8 @@ function aggiornaTitoloCalendario() {
 //  APRI POPUP PER NUOVA ATTIVITÀ
 // ----------------------
 function apriPopupPerData(dateStr) {
-    document.getElementById("oraInizio").value = "";
-    document.getElementById("oraFine").value = "";
+    document.getElementById("oraInizio").value = "09:00";
+    document.getElementById("oraFine").value = "18:00";
     document.getElementById("progetto").value = "";
     document.getElementById("cliente").value = "";
     document.getElementById("attivita").value = "";
@@ -74,9 +115,21 @@ document.getElementById("btnSalva").addEventListener("click", async function () 
         spesaAlloggio: document.getElementById("spesaAlloggio").value || 0
     };
 
+    // Validazione
+    if (!dto.progetto || !dto.cliente || !dto.attivita) {
+        alert("Compila tutti i campi obbligatori!");
+        return;
+    }
+
+    const durata = calcolaDurata(dto.oraInizio, dto.oraFine);
+    if (durata <= 0) {
+        alert("L'orario di fine deve essere dopo l'orario di inizio!");
+        return;
+    }
+
     const url = id
-        ? "/Dipendente/CalendarioApi/UpdateAttivita"
-        : "/Dipendente/CalendarioApi/AddAttivita";
+        ? `/${currentArea}/CalendarioApi/UpdateAttivita`
+        : `/${currentArea}/CalendarioApi/AddAttivita`;
 
     const res = await fetch(url, {
         method: "POST",
@@ -90,9 +143,21 @@ document.getElementById("btnSalva").addEventListener("click", async function () 
 
         calendar.removeAllEvents();
 
-        fetch("/Dipendente/CalendarioApi/GetAttivita")
+        fetch(`/${currentArea}/CalendarioApi/GetAttivita`)
             .then(r => r.json())
-            .then(lista => lista.forEach(ev => calendar.addEvent(ev)));
+            .then(lista => {
+                lista.forEach(ev => {
+                    calendar.addEvent({
+                        id: ev.id,
+                        title: `${ev.progetto} - ${ev.attivita}`,
+                        start: ev.start,
+                        end: ev.end,
+                        backgroundColor: getColorForProject(ev.progetto),
+                        borderColor: getColorForProject(ev.progetto),
+                        extendedProps: ev
+                    });
+                });
+            });
 
     } else {
         alert("Errore nel salvataggio.");
@@ -109,7 +174,7 @@ document.getElementById("btnElimina").addEventListener("click", async function (
 
     if (!confirm("Vuoi davvero eliminare questa attività?")) return;
 
-    const res = await fetch("/Dipendente/CalendarioApi/DeleteAttivita", {
+    const res = await fetch(`/${currentArea}/CalendarioApi/DeleteAttivita`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(parseInt(id))
@@ -133,6 +198,12 @@ document.addEventListener("DOMContentLoaded", function () {
         selectable: true,
         height: 650,
         headerToolbar: false,
+        
+        eventTimeFormat: {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false
+        },
 
         dateClick: info => apriPopupPerData(info.dateStr),
 
@@ -164,16 +235,63 @@ document.addEventListener("DOMContentLoaded", function () {
             btnElimina.setAttribute("data-id", ev.id);
 
             new bootstrap.Modal(document.getElementById("modaleOre")).show();
+        },
+        
+        // Totale ore per giorno
+        dayCellDidMount: function(info) {
+            const dateStr = info.date.toISOString().split('T')[0];
+            const events = calendar.getEvents().filter(e => 
+                e.start && e.start.toISOString().split('T')[0] === dateStr
+            );
+            
+            if (events.length > 0) {
+                let totalMinutes = 0;
+                events.forEach(e => {
+                    if (e.start && e.end) {
+                        totalMinutes += (e.end - e.start) / (1000 * 60);
+                    }
+                });
+                const hours = (totalMinutes / 60).toFixed(1);
+                
+                const badge = document.createElement('div');
+                badge.className = 'day-total-hours';
+                badge.textContent = `${hours}h`;
+                badge.style.cssText = `
+                    position: absolute;
+                    bottom: 2px;
+                    right: 2px;
+                    background: ${hours >= 6 ? '#28a745' : '#ffc107'};
+                    color: white;
+                    padding: 2px 6px;
+                    border-radius: 10px;
+                    font-size: 0.7rem;
+                    font-weight: 600;
+                `;
+                info.el.style.position = 'relative';
+                info.el.appendChild(badge);
+            }
         }
     });
 
     calendar.render();
     aggiornaTitoloCalendario();
 
-    // Caricamento eventi
-    fetch("/Dipendente/CalendarioApi/GetAttivita")
+    // Caricamento eventi con colori
+    fetch(`/${currentArea}/CalendarioApi/GetAttivita`)
         .then(r => r.json())
-        .then(lista => lista.forEach(ev => calendar.addEvent(ev)));
+        .then(lista => {
+            lista.forEach(ev => {
+                calendar.addEvent({
+                    id: ev.id,
+                    title: `${ev.progetto} - ${ev.attivita}`,
+                    start: ev.start,
+                    end: ev.end,
+                    backgroundColor: getColorForProject(ev.progetto),
+                    borderColor: getColorForProject(ev.progetto),
+                    extendedProps: ev
+                });
+            });
+        });
 
     // Navigazione
     document.getElementById("prevBtn").addEventListener("click", () => {

@@ -1,0 +1,360 @@
+@model Template.Web.Areas.Responsabile.Controllers.RendicontazioneViewModel
+@{
+    ViewData["Title"] = "Rendicontazione Settimanale – Responsabile";
+}
+
+@section pageTitle {
+    <div class="onit-page-title">
+        <h1><i class="fa-solid fa-clipboard-list"></i> Rendicontazione settimanale</h1>
+    </div>
+}
+
+<div class="container-fluid onit-page-content">
+
+    <div class="row">
+
+        <!-- SIDEBAR RESPONSABILE -->
+        <div class="col-2 onit-sidebar">
+            <ul class="onit-sidebar-menu">
+                <li>
+                    <a asp-area="Responsabile"
+                    asp-controller="Dashboard"
+                    asp-action="Index">
+                        <i class="fa-solid fa-calendar-check"></i> Attività
+                    </a>
+                </li>
+                <li>
+                    <a asp-area="Responsabile"
+                    asp-controller="Progetti"
+                    asp-action="Index">
+                        <i class="fa-solid fa-diagram-project"></i> Progetti
+                    </a>
+                </li>
+                <li>
+                    <a asp-area="Responsabile"
+                    asp-controller="Rendicontazione"
+                    asp-action="Index">
+                        <i class="fa-solid fa-clipboard-list"></i> Rendicontazione
+                    </a>
+                </li>
+                <li>
+                    <a asp-area="Responsabile"
+                    asp-controller="Congedo"
+                    asp-action="Index">
+                        <i class="fa-solid fa-plane-departure"></i> Congedo
+                    </a>
+                </li>
+                <li>
+                    <a asp-area="Responsabile"
+                    asp-controller="Contratto"
+                    asp-action="Index">
+                        <i class="fa-solid fa-file-contract"></i> Contratto
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- MAIN CONTENT -->
+        <div class="col-10">
+
+            <!-- Header con navigazione mese -->
+            <div class="onit-toolbar d-flex justify-content-between align-items-center mb-4">
+                <h3 class="fw-bold mb-0" id="titoloMese">Caricamento...</h3>
+                
+                <div class="d-flex align-items-center gap-3">
+                    <!-- Indicatori legenda -->
+                    <div class="d-flex gap-3 me-4">
+                        <span class="badge-legenda badge-completo">
+                            <i class="fa-solid fa-circle-check"></i> Completo
+                        </span>
+                        <span class="badge-legenda badge-parziale">
+                            <i class="fa-solid fa-triangle-exclamation"></i> Parziale
+                        </span>
+                        <span class="badge-legenda badge-mancante">
+                            <i class="fa-solid fa-circle-xmark"></i> Mancante
+                        </span>
+                        <span class="badge-legenda badge-congedo">
+                            <i class="fa-solid fa-plane-departure"></i> Congedo
+                        </span>
+                    </div>
+
+                    <div class="btn-group">
+                        <button id="btnMesePrecedente" class="btn btn-outline-secondary">
+                            <i class="fa-solid fa-chevron-left"></i>
+                        </button>
+                        <button id="btnMeseCorrente" class="btn btn-outline-primary">
+                            Oggi
+                        </button>
+                        <button id="btnMeseSuccessivo" class="btn btn-outline-secondary">
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Alert info -->
+            <div class="alert alert-info d-flex align-items-center mb-3">
+                <i class="fa-solid fa-lightbulb fa-2x me-3"></i>
+                <div>
+                    <strong>Suggerimento:</strong> Clicca su un giorno per aggiungere o modificare le tue attività. 
+                    Assicurati che tutti i giorni lavorativi siano in <strong class="text-success">verde</strong> 
+                    prima della fine del mese!
+                </div>
+            </div>
+
+            <!-- Riepilogo mese -->
+            <div class="row mb-3">
+                <div class="col-md-3">
+                    <div class="onit-card p-3 text-center">
+                        <h2 class="mb-0 text-success" id="giorniCompleti">0</h2>
+                        <small class="text-muted">Giorni completi</small>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="onit-card p-3 text-center">
+                        <h2 class="mb-0 text-warning" id="giorniParziali">0</h2>
+                        <small class="text-muted">Giorni parziali</small>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="onit-card p-3 text-center">
+                        <h2 class="mb-0 text-danger" id="giorniMancanti">0</h2>
+                        <small class="text-muted">Giorni mancanti</small>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="onit-card p-3 text-center">
+                        <h2 class="mb-0 text-primary" id="oreTotali">0</h2>
+                        <small class="text-muted">Ore totali</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Griglia giorni del mese -->
+            <div class="onit-card p-4">
+                <div class="row g-2" id="grigliaGiorni">
+                    <!-- I giorni verranno inseriti qui via JavaScript -->
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+@section styles {
+<style>
+    /* Status colors */
+    .status-completo {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        border-color: #28a745;
+    }
+
+    .status-parziale {
+        background: linear-gradient(135deg, #ffc107 0%, #ffb347 100%);
+        border-color: #ffc107;
+    }
+
+    .status-mancante {
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        border-color: #dc3545;
+    }
+
+    .status-congedo {
+        background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+        border-color: #17a2b8;
+    }
+
+    /* Giorno card */
+    .giorno-card {
+        aspect-ratio: 1;
+        border-radius: 12px;
+        color: white;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .giorno-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+    }
+
+    .giorno-card .giorno-numero {
+        font-size: 2rem;
+        font-weight: 700;
+        line-height: 1;
+    }
+
+    .giorno-card .giorno-settimana {
+        font-size: 0.75rem;
+        opacity: 0.9;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .giorno-card .giorno-ore {
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin-top: 0.5rem;
+    }
+
+    .giorno-card .badge-attivita {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        background: rgba(255,255,255,0.3);
+        color: white;
+        font-size: 0.7rem;
+        padding: 2px 6px;
+        border-radius: 10px;
+    }
+
+    /* Badge legenda */
+    .badge-legenda {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+
+    .badge-completo {
+        background-color: #d4edda;
+        color: #155724;
+    }
+
+    .badge-parziale {
+        background-color: #fff3cd;
+        color: #856404;
+    }
+
+    .badge-mancante {
+        background-color: #f8d7da;
+        color: #721c24;
+    }
+
+    .badge-congedo {
+        background-color: #d1ecf1;
+        color: #0c5460;
+    }
+
+    /* Pulse animation per giorni mancanti */
+    @@keyframes pulse-red {
+        0%, 100% { box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        50% { box-shadow: 0 0 20px rgba(220, 53, 69, 0.5); }
+    }
+
+    .status-mancante {
+        animation: pulse-red 2s infinite;
+    }
+</style>
+}
+
+@section scripts {
+<script>
+    let meseCorrente = new Date().getMonth();
+    let annoCorrente = new Date().getFullYear();
+
+    // Carica dati del mese
+    async function caricaMese() {
+        const response = await fetch(`/Responsabile/Rendicontazione/GetStatoMese?anno=${annoCorrente}&mese=${meseCorrente + 1}`);
+        const data = await response.json();
+        
+        aggiornaIntestazione();
+        renderizzaGiorni(data.giorni);
+        aggiornaStatistiche(data.giorni);
+    }
+
+    // Aggiorna titolo mese
+    function aggiornaIntestazione() {
+        const data = new Date(annoCorrente, meseCorrente, 1);
+        const nomeMese = data.toLocaleDateString('it-IT', { month: 'long', year: 'numeric' });
+        document.getElementById('titoloMese').textContent = 
+            nomeMese.charAt(0).toUpperCase() + nomeMese.slice(1);
+    }
+
+    // Renderizza griglia giorni
+    function renderizzaGiorni(giorni) {
+        const container = document.getElementById('grigliaGiorni');
+        container.innerHTML = '';
+
+        giorni.forEach(g => {
+            const col = document.createElement('div');
+            col.className = 'col-lg-2 col-md-3 col-sm-4';
+            
+            const card = document.createElement('div');
+            card.className = `giorno-card ${g.colorClass} d-flex flex-column align-items-center justify-content-center p-3`;
+            card.onclick = () => apriGiorno(g.data);
+            
+            if (g.numeroAttivita > 0) {
+                const badge = document.createElement('span');
+                badge.className = 'badge-attivita';
+                badge.innerHTML = `<i class="fa-solid fa-list-check"></i> ${g.numeroAttivita}`;
+                card.appendChild(badge);
+            }
+
+            card.innerHTML += `
+                <div class="giorno-settimana">${g.giornoSettimana}</div>
+                <div class="giorno-numero">${g.dataFormattata.split('/')[0]}</div>
+                <div class="giorno-ore">${g.ore > 0 ? g.ore + 'h' : '—'}</div>
+            `;
+
+            col.appendChild(card);
+            container.appendChild(col);
+        });
+    }
+
+    // Aggiorna statistiche
+    function aggiornaStatistiche(giorni) {
+        const completi = giorni.filter(g => g.stato === 'Completo').length;
+        const parziali = giorni.filter(g => g.stato === 'Parziale').length;
+        const mancanti = giorni.filter(g => g.stato === 'Mancante').length;
+        const oreTot = giorni.reduce((sum, g) => sum + g.ore, 0);
+
+        document.getElementById('giorniCompleti').textContent = completi;
+        document.getElementById('giorniParziali').textContent = parziali;
+        document.getElementById('giorniMancanti').textContent = mancanti;
+        document.getElementById('oreTotali').textContent = Math.round(oreTot);
+    }
+
+    // Apri giorno per inserire attività (redirect al calendario)
+    function apriGiorno(data) {
+        // Reindirizza alla dashboard Attività con focus sul giorno
+        window.location.href = `/Responsabile/Dashboard?date=${data}`;
+    }
+
+    // Navigazione mesi
+    document.getElementById('btnMesePrecedente').addEventListener('click', () => {
+        meseCorrente--;
+        if (meseCorrente < 0) {
+            meseCorrente = 11;
+            annoCorrente--;
+        }
+        caricaMese();
+    });
+
+    document.getElementById('btnMeseSuccessivo').addEventListener('click', () => {
+        meseCorrente++;
+        if (meseCorrente > 11) {
+            meseCorrente = 0;
+            annoCorrente++;
+        }
+        caricaMese();
+    });
+
+    document.getElementById('btnMeseCorrente').addEventListener('click', () => {
+        const oggi = new Date();
+        meseCorrente = oggi.getMonth();
+        annoCorrente = oggi.getFullYear();
+        caricaMese();
+    });
+
+    // Inizializzazione
+    document.addEventListener('DOMContentLoaded', () => {
+        caricaMese();
+    });
+</script>
+}

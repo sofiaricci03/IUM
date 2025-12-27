@@ -28,9 +28,20 @@
                         {
                             <li class="nav-item dropdown">
                                 <a href="#" class="nav-link dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    <img class="user-profile-picture" src="@identitaCorrente.GravatarUrl" />&nbsp;@identitaCorrente.EmailUtenteCorrente
+                                    <img class="user-profile-picture rounded-circle" 
+                                        src="@Url.Action("Immagine", "Profilo")" 
+                                        id="currentProfileImage"
+                                        onerror="this.src='@identitaCorrente.GravatarUrl'" 
+                                        style="width: 35px; height: 35px; object-fit: cover;" />&nbsp;@identitaCorrente.EmailUtenteCorrente
                                 </a>
                                 <div class="dropdown-menu dropdown-menu-dark dropdown-menu-end" role="menu">
+                                    <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#modalCambiaFoto">
+                                        <i class="fa-solid fa-camera"></i>&nbsp;Cambia foto profilo
+                                    </a>
+                                    <a class="dropdown-item" href="#" onclick="rimuoviFotoProfilo(); return false;">
+                                        <i class="fa-solid fa-trash"></i>&nbsp;Rimuovi foto
+                                    </a>
+                                    <div class="dropdown-divider"></div>
                                     <a class="dropdown-item" href="javascript:void(0)" onclick="javascript: document.getElementById('POST_LogOut').submit()" title="@SharedLocalizer["Chiudi sessione di lavoro"]">
                                         <i class="fa-solid fa-right-from-bracket"></i>&nbsp;@SharedLocalizer["Esci"]
                                     </a>
@@ -46,6 +57,43 @@
     </div>
     @RenderSection("pageSubtitle", false)
     @RenderBody()
+    <!-- MODALE CAMBIO FOTO -->
+<div class="modal fade" id="modalCambiaFoto" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fa-solid fa-camera"></i> Cambia foto profilo
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center mb-3">
+                    <img src="@Url.Action("Immagine", "Profilo")" 
+                         class="rounded-circle mb-3" 
+                         style="width: 120px; height: 120px; object-fit: cover;"
+                         id="previewImage"
+                         alt="Anteprima">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Seleziona nuova immagine</label>
+                    <input type="file" 
+                           class="form-control" 
+                           id="fileInput" 
+                           accept="image/jpeg,image/jpg,image/png,image/gif">
+                    <small class="text-muted">Formati: JPG, PNG, GIF. Max 5MB</small>
+                </div>
+                <div id="uploadMessage" class="alert d-none"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
+                <button type="button" class="btn btn-primary" onclick="uploadFotoProfilo()">
+                    <i class="fa-solid fa-upload"></i> Carica foto
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 </div>
 @section googlehead{
     @*<script async src="https://www.googletagmanager.com/gtag/js?id=UA-"></script>
@@ -59,6 +107,74 @@
 @section scripts{
     <script type="text/javascript">
         @this.RenderAlertsWithToastify()
+
+        // Preview immagine selezionata
+        document.getElementById('fileInput')?.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    document.getElementById('previewImage').src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Upload foto profilo
+        async function uploadFotoProfilo() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                showMessage('Seleziona un\'immagine', 'warning');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await fetch('/Profilo/UploadFoto', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showMessage(data.message, 'success');
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    showMessage(data.error || 'Errore durante l\'upload', 'danger');
+                }
+            } catch (error) {
+                showMessage('Errore di connessione', 'danger');
+            }
+        }
+
+        // Rimuovi foto profilo
+        async function rimuoviFotoProfilo() {
+            if (!confirm('Vuoi rimuovere la foto profilo?')) return;
+
+            try {
+                const response = await fetch('/Profilo/RimuoviFoto', { method: 'POST' });
+                const data = await response.json();
+                if (response.ok) {
+                    location.reload();
+                } else {
+                    alert('Errore durante la rimozione');
+                }
+            } catch (error) {
+                alert('Errore di connessione');
+            }
+        }
+
+        function showMessage(message, type) {
+            const msgDiv = document.getElementById('uploadMessage');
+            msgDiv.className = `alert alert-${type}`;
+            msgDiv.textContent = message;
+            msgDiv.classList.remove('d-none');
+        }
     </script>
 
     @RenderSection("scripts", false)
