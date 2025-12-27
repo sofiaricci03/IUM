@@ -1,11 +1,11 @@
 @model Template.Web.Areas.Dipendente.Controllers.RendicontazioneViewModel
 @{
-    ViewData["Title"] = "Rendicontazione Settimanale – Dipendente";
+    ViewData["Title"] = "Rendicontazione Mensile – Dipendente";
 }
 
 @section pageTitle {
     <div class="onit-page-title">
-        <h1><i class="fa-solid fa-clipboard-list"></i> Rendicontazione settimanale</h1>
+        <h1><i class="fa-solid fa-clipboard-list"></i> Rendicontazione mensile</h1>
     </div>
 }
 
@@ -18,36 +18,37 @@
             <ul class="onit-sidebar-menu">
                 <li>
                     <a asp-area="Dipendente"
-                    asp-controller="Dashboard"
-                    asp-action="Index">
+                       asp-controller="Dashboard"
+                       asp-action="Index">
                         <i class="fa-solid fa-calendar-check"></i> Attività
                     </a>
                 </li>
                 <li>
                     <a asp-area="Dipendente"
-                    asp-controller="Progetti"
-                    asp-action="Index">
+                       asp-controller="Progetti"
+                       asp-action="Index">
                         <i class="fa-solid fa-diagram-project"></i> Progetti
                     </a>
                 </li>
                 <li>
-                    <a asp-area="Dipendente"
-                    asp-controller="Rendicontazione"
-                    asp-action="Index">
+                    <a class="active"
+                       asp-area="Dipendente"
+                       asp-controller="Rendicontazione"
+                       asp-action="Index">
                         <i class="fa-solid fa-clipboard-list"></i> Rendicontazione
                     </a>
                 </li>
                 <li>
                     <a asp-area="Dipendente"
-                    asp-controller="Congedo"
-                    asp-action="Index">
+                       asp-controller="Congedo"
+                       asp-action="Index">
                         <i class="fa-solid fa-plane-departure"></i> Congedo
                     </a>
                 </li>
                 <li>
                     <a asp-area="Dipendente"
-                    asp-controller="Contratto"
-                    asp-action="Index">
+                       asp-controller="Contratto"
+                       asp-action="Index">
                         <i class="fa-solid fa-file-contract"></i> Contratto
                     </a>
                 </li>
@@ -92,14 +93,25 @@
                 </div>
             </div>
 
-            <!-- Alert info -->
-            <div class="alert alert-info d-flex align-items-center mb-3">
+            <!-- Alert stato rendicontazione -->
+            <div id="alertStato"></div>
+
+            <!-- Alert info (solo se stato = Bozza) -->
+            <div class="alert alert-info d-flex align-items-center mb-3" id="alertSuggerimento">
                 <i class="fa-solid fa-lightbulb fa-2x me-3"></i>
                 <div>
                     <strong>Suggerimento:</strong> Clicca su un giorno per aggiungere o modificare le tue attività. 
                     Assicurati che tutti i giorni lavorativi siano in <strong class="text-success">verde</strong> 
                     prima della fine del mese!
                 </div>
+            </div>
+
+            <!-- Pulsante Invia (solo se stato = Bozza) -->
+            <div class="text-center mb-3" id="containerInvia" style="display:none;">
+                <button class="btn btn-success btn-lg" onclick="inviaRendicontazione()">
+                    <i class="fa-solid fa-paper-plane"></i> Invia per approvazione
+                </button>
+                <p class="text-muted mt-2">Verifica che tutti i giorni siano verdi prima di inviare</p>
             </div>
 
             <!-- Riepilogo mese -->
@@ -140,6 +152,7 @@
         </div>
     </div>
 </div>
+
 @section styles {
 <style>
     /* Status colors */
@@ -213,7 +226,7 @@
     /* Badge legenda */
     .badge-legenda {
         display: inline-flex;
-        align-items: center;
+        align-items-center;
         gap: 5px;
         padding: 6px 12px;
         border-radius: 20px;
@@ -266,6 +279,7 @@
         aggiornaIntestazione();
         renderizzaGiorni(data.giorni);
         aggiornaStatistiche(data.giorni);
+        aggiornaStatoRendicontazione(data); // AGGIUNTO QUESTA RIGA
     }
 
     // Aggiorna titolo mese
@@ -318,6 +332,90 @@
         document.getElementById('giorniParziali').textContent = parziali;
         document.getElementById('giorniMancanti').textContent = mancanti;
         document.getElementById('oreTotali').textContent = Math.round(oreTot);
+    }
+
+    // Aggiorna alert stato rendicontazione
+    function aggiornaStatoRendicontazione(data) {
+        const stato = data.statoRendicontazione;
+        const alertDiv = document.getElementById('alertStato');
+        const containerInvia = document.getElementById('containerInvia');
+        const alertSuggerimento = document.getElementById('alertSuggerimento');
+        
+        // Reset
+        alertDiv.innerHTML = '';
+        containerInvia.style.display = 'none';
+        alertSuggerimento.style.display = 'none';
+        
+        if (stato === 'Bozza') {
+            // Mostra pulsante invia
+            containerInvia.style.display = 'block';
+            alertSuggerimento.style.display = 'block';
+        } 
+        else if (stato === 'Inviata') {
+            alertDiv.innerHTML = `
+                <div class="alert alert-info d-flex align-items-center mb-3">
+                    <i class="fa-solid fa-clock fa-2x me-3"></i>
+                    <div>
+                        <strong>Rendicontazione inviata</strong><br>
+                        Inviata il ${data.dataInvio}. In attesa di approvazione dal responsabile.
+                    </div>
+                </div>`;
+        }
+        else if (stato === 'Approvata') {
+            alertDiv.innerHTML = `
+                <div class="alert alert-success d-flex align-items-center mb-3">
+                    <i class="fa-solid fa-circle-check fa-2x me-3"></i>
+                    <div>
+                        <strong>Rendicontazione approvata!</strong><br>
+                        Approvata il ${data.dataApprovazione}. La rendicontazione è stata inviata al payroll.
+                    </div>
+                </div>`;
+        }
+        else if (stato === 'Respinta') {
+            alertDiv.innerHTML = `
+                <div class="alert alert-danger mb-3">
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="fa-solid fa-circle-xmark fa-2x me-3"></i>
+                        <div>
+                            <strong>Rendicontazione respinta</strong><br>
+                            Il responsabile ha respinto la rendicontazione. Correggi e invia nuovamente.
+                        </div>
+                    </div>
+                    ${data.noteResponsabile ? `
+                        <div class="mt-3 p-3 bg-white rounded">
+                            <strong>Motivazione:</strong><br>
+                            ${data.noteResponsabile}
+                        </div>
+                    ` : ''}
+                </div>`;
+            // Mostra pulsante per reinviare
+            containerInvia.style.display = 'block';
+            alertSuggerimento.style.display = 'block';
+        }
+    }
+
+    // Invia rendicontazione
+    async function inviaRendicontazione() {
+        if (!confirm('Sei sicuro di voler inviare la rendicontazione per approvazione? Non potrai più modificarla.')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/Dipendente/Rendicontazione/InviaRendicontazione?anno=${annoCorrente}&mese=${meseCorrente + 1}`, {
+                method: 'POST'
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                alert(data.message);
+                caricaMese(); // Ricarica per aggiornare lo stato
+            } else {
+                alert(data.error || 'Errore durante l\'invio');
+            }
+        } catch (error) {
+            alert('Errore di connessione');
+        }
     }
 
     // Apri giorno per inserire attività (redirect al calendario)

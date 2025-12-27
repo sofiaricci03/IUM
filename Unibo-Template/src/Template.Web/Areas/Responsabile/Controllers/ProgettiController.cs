@@ -8,13 +8,14 @@ using System.Threading.Tasks;
 using Template.Entities;
 using Template.Services;
 using Template.Services.Shared;
+using Template.Web.Areas;
 using System;
 
 namespace Template.Web.Areas.Responsabile.Controllers
 {
     [Area("Responsabile")]
     [Authorize(Roles = nameof(UserRole.Responsabile))]
-    public partial class ProgettiController : Controller
+    public partial class ProgettiController : BaseAreaController
     {
         private readonly TemplateDbContext _context;
 

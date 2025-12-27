@@ -2,12 +2,13 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using Template.Services.Shared;
+using Template.Web.Areas;
 
 namespace Template.Web.Areas.Responsabile.Controllers
 {
     [Area("Responsabile")]
     [Authorize(Roles = nameof(UserRole.Responsabile))]
-    public partial class DashboardController : Controller
+    public partial class DashboardController : BaseAreaController
     {
         public virtual IActionResult Index()
         {

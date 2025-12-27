@@ -8,12 +8,13 @@ using System.Threading.Tasks;
 using Template.Services;
 using Template.Services.Shared;
 using Template.Entities;
+using Template.Web.Areas;
 
 namespace Template.Web.Areas.Responsabile.Controllers
 {
     [Area("Responsabile")]
     [Authorize(Roles = nameof(UserRole.Responsabile))]
-    public partial class RendicontazioneController : Controller
+    public partial class RendicontazioneController : BaseAreaController
     {
         private readonly TemplateDbContext _ctx;
 

@@ -2,12 +2,14 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using Template.Services.Shared;
+using Template.Web.Areas;
+
 
 namespace Template.Web.Areas.Dipendente.Controllers
 {
     [Area("Dipendente")]
     [Authorize(Roles = nameof(UserRole.Dipendente))]
-    public partial class DashboardController : Controller
+    public partial class DashboardController : BaseAreaController
     {
         // IMPORTANTISSIMO: deve essere virtual per compatibilità con Sg4Mvc
         public virtual IActionResult Index()

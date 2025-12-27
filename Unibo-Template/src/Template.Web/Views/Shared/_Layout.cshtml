@@ -3,15 +3,50 @@
 @{
     Layout = "_LayoutHtml";
     var version = System.Reflection.Assembly.GetAssembly(typeof(Startup)).GetName().Version;
-
     var identitaCorrente = (Template.Web.Areas.IdentitaViewModel)ViewData[Template.Web.Areas.IdentitaViewModel.VIEWDATA_IDENTITACORRENTE_KEY];
 }
-@section metas{
+
+@section metas {
     @RenderSection("metas", false)
 }
-@section styles{
+
+@section styles {
     @RenderSection("styles", false)
+    
+    <style>
+        /* Dropdown profilo */
+        .dropdown-menu {
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .dropdown-header.bg-light {
+            background-color: #f8f9fa !important;
+            border-radius: 8px 8px 0 0;
+        }
+        
+        .dropdown-item {
+            padding: 0.5rem 1.5rem;
+            transition: all 0.2s;
+        }
+        
+        .dropdown-item:hover {
+            background-color: #f8f9fa;
+            transform: translateX(5px);
+        }
+        
+        .dropdown-item i {
+            width: 20px;
+            margin-right: 8px;
+        }
+        
+        .user-profile-picture {
+            border: 2px solid #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+    </style>
 }
+
 <div id="pageId" class="onit-page">
     <div class="onit-page-sticky-top" id="onit-page-sticky-top">
         <nav class="navbar navbar-expand-lg navbar-dark onit-page-menu">
@@ -27,26 +62,58 @@
                         @if (identitaCorrente != null)
                         {
                             <li class="nav-item dropdown">
-                                <a href="#" class="nav-link dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    <img class="user-profile-picture rounded-circle" 
-                                        src="@Url.Action("Immagine", "Profilo")" 
-                                        id="currentProfileImage"
-                                        onerror="this.src='@identitaCorrente.GravatarUrl'" 
-                                        style="width: 35px; height: 35px; object-fit: cover;" />&nbsp;@identitaCorrente.EmailUtenteCorrente
+                                <a href="#" 
+                                   class="nav-link dropdown-toggle d-flex align-items-center" 
+                                   type="button" 
+                                   id="dropdownProfilo"
+                                   data-bs-toggle="dropdown" 
+                                   aria-expanded="false">
+                                    <img class="user-profile-picture rounded-circle me-2" 
+                                         src="@identitaCorrente.GravatarUrl" 
+                                         id="currentProfileImage"
+                                         style="width: 35px; height: 35px; object-fit: cover;" />
+                                    <span class="d-none d-lg-inline">@identitaCorrente.EmailUtenteCorrente</span>
+                                    <i class="fa-solid fa-chevron-down ms-2"></i>
                                 </a>
-                                <div class="dropdown-menu dropdown-menu-dark dropdown-menu-end" role="menu">
-                                    <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#modalCambiaFoto">
-                                        <i class="fa-solid fa-camera"></i>&nbsp;Cambia foto profilo
-                                    </a>
-                                    <a class="dropdown-item" href="#" onclick="rimuoviFotoProfilo(); return false;">
-                                        <i class="fa-solid fa-trash"></i>&nbsp;Rimuovi foto
-                                    </a>
-                                    <div class="dropdown-divider"></div>
-                                    <a class="dropdown-item" href="javascript:void(0)" onclick="javascript: document.getElementById('POST_LogOut').submit()" title="@SharedLocalizer["Chiudi sessione di lavoro"]">
-                                        <i class="fa-solid fa-right-from-bracket"></i>&nbsp;@SharedLocalizer["Esci"]
-                                    </a>
-                                    <form autocomplete="off" method="post" action="@Url.Action(MVC.Login.Logout())" id="POST_LogOut" display="none"></form>
-                                </div>
+                                <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="dropdownProfilo" style="min-width: 280px;">
+                                    <!-- Header profilo -->
+                                    <li class="dropdown-header bg-light">
+                                        <div class="d-flex align-items-center py-2">
+                                            <img src="@identitaCorrente.GravatarUrl" 
+                                                 class="rounded-circle me-3" 
+                                                 style="width: 50px; height: 50px; object-fit: cover;">
+                                            <div>
+                                                <div class="fw-bold text-dark">@identitaCorrente.EmailUtenteCorrente.Split('@')[0]</div>
+                                                <small class="text-muted">@identitaCorrente.EmailUtenteCorrente</small>
+                                            </div>
+                                        </div>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    
+                                    <!-- Opzioni profilo -->
+                                    <li>
+                                        <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#modalCambiaFoto">
+                                            <i class="fa-solid fa-camera text-primary"></i> Cambia foto profilo
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="#" onclick="rimuoviFotoProfilo(); return false;">
+                                            <i class="fa-solid fa-trash text-danger"></i> Rimuovi foto
+                                        </a>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    
+                                    <!-- Logout -->
+                                    <li>
+                                        <a class="dropdown-item text-danger" 
+                                           href="javascript:void(0)" 
+                                           onclick="javascript: document.getElementById('POST_LogOut').submit()" 
+                                           title="@SharedLocalizer["Chiudi sessione di lavoro"]">
+                                            <i class="fa-solid fa-right-from-bracket"></i> @SharedLocalizer["Esci"]
+                                        </a>
+                                    </li>
+                                </ul>
+                                <form autocomplete="off" method="post" action="@Url.Action(MVC.Login.Logout())" id="POST_LogOut" style="display:none;"></form>
                             </li>
                         }
                     </ul>
@@ -55,56 +122,63 @@
         </nav>
         @RenderSection("pageTitle", false)
     </div>
+    
     @RenderSection("pageSubtitle", false)
     @RenderBody()
+    
     <!-- MODALE CAMBIO FOTO -->
-<div class="modal fade" id="modalCambiaFoto" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">
-                    <i class="fa-solid fa-camera"></i> Cambia foto profilo
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <div class="text-center mb-3">
-                    <img src="@Url.Action("Immagine", "Profilo")" 
-                         class="rounded-circle mb-3" 
-                         style="width: 120px; height: 120px; object-fit: cover;"
-                         id="previewImage"
-                         alt="Anteprima">
+    @if (identitaCorrente != null)
+    {
+        <div class="modal fade" id="modalCambiaFoto" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="fa-solid fa-camera"></i> Cambia foto profilo
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="text-center mb-3">
+                            <img src="@identitaCorrente.GravatarUrl" 
+                                 class="rounded-circle mb-3" 
+                                 style="width: 120px; height: 120px; object-fit: cover;"
+                                 id="previewImage"
+                                 alt="Anteprima">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Seleziona nuova immagine</label>
+                            <input type="file" 
+                                   class="form-control" 
+                                   id="fileInput" 
+                                   accept="image/jpeg,image/jpg,image/png,image/gif">
+                            <small class="text-muted">Formati: JPG, PNG, GIF. Max 5MB</small>
+                        </div>
+                        <div id="uploadMessage" class="alert d-none"></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
+                        <button type="button" class="btn btn-primary" onclick="uploadFotoProfilo()">
+                            <i class="fa-solid fa-upload"></i> Carica foto
+                        </button>
+                    </div>
                 </div>
-                <div class="mb-3">
-                    <label class="form-label">Seleziona nuova immagine</label>
-                    <input type="file" 
-                           class="form-control" 
-                           id="fileInput" 
-                           accept="image/jpeg,image/jpg,image/png,image/gif">
-                    <small class="text-muted">Formati: JPG, PNG, GIF. Max 5MB</small>
-                </div>
-                <div id="uploadMessage" class="alert d-none"></div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
-                <button type="button" class="btn btn-primary" onclick="uploadFotoProfilo()">
-                    <i class="fa-solid fa-upload"></i> Carica foto
-                </button>
             </div>
         </div>
-    </div>
+    }
 </div>
-</div>
-@section googlehead{
+
+@section googlehead {
     @*<script async src="https://www.googletagmanager.com/gtag/js?id=UA-"></script>
     <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag() { dataLayer.push(arguments); }
-    gtag('js', new Date());
-    gtag('config', 'UA-', { 'anonymize_ip': true });    // Ricordarsi di anonimizzare per fare ricadere il cookie tra quelli tecnici ed evitare l'obbligo del banner
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+        gtag('config', 'UA-', { 'anonymize_ip': true });
     </script>*@
-    }
-@section scripts{
+}
+
+@section scripts {
     <script type="text/javascript">
         @this.RenderAlertsWithToastify()
 
