@@ -17,7 +17,7 @@ namespace Template.Entities
 
         public int OreSettimanaliContratto { get; set; }
 
-        // Es: ferie residue, permessi, malattia
+        // ferie residue, permessi, malattia
         public int FerieResidue { get; set; }
         public int PermessiResidui { get; set; }
         public int GiorniMalattiaDisponibili { get; set; }

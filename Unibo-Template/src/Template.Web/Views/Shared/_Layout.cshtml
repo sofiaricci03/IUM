@@ -69,9 +69,10 @@
                                    data-bs-toggle="dropdown" 
                                    aria-expanded="false">
                                     <img class="user-profile-picture rounded-circle me-2" 
-                                         src="@identitaCorrente.GravatarUrl" 
-                                         id="currentProfileImage"
-                                         style="width: 35px; height: 35px; object-fit: cover;" />
+                                        src="/Profilo/Immagine?v=@DateTime.Now.Ticks" 
+                                        id="currentProfileImage"
+                                        style="width: 35px; height: 35px; object-fit: cover;"
+                                        onerror="this.src='@identitaCorrente.GravatarUrl'" />
                                     <span class="d-none d-lg-inline">@identitaCorrente.EmailUtenteCorrente</span>
                                     <i class="fa-solid fa-chevron-down ms-2"></i>
                                 </a>
@@ -79,11 +80,12 @@
                                     <!-- Header profilo -->
                                     <li class="dropdown-header bg-light">
                                         <div class="d-flex align-items-center py-2">
-                                            <img src="@identitaCorrente.GravatarUrl" 
-                                                 class="rounded-circle me-3" 
-                                                 style="width: 50px; height: 50px; object-fit: cover;">
+                                            <img src="/Profilo/Immagine?v=@DateTime.Now.Ticks" 
+                                                class="rounded-circle me-3" 
+                                                style="width: 50px; height: 50px; object-fit: cover;"
+                                                onerror="this.src='@identitaCorrente.GravatarUrl'">
                                             <div>
-                                                <div class="fw-bold text-dark">@identitaCorrente.EmailUtenteCorrente.Split('@')[0]</div>
+                                                <div class="fw-bold text-dark">@identitaCorrente.NomeCompletoUtenteCorrente</div>
                                                 <small class="text-muted">@identitaCorrente.EmailUtenteCorrente</small>
                                             </div>
                                         </div>
@@ -140,11 +142,12 @@
                     </div>
                     <div class="modal-body">
                         <div class="text-center mb-3">
-                            <img src="@identitaCorrente.GravatarUrl" 
-                                 class="rounded-circle mb-3" 
-                                 style="width: 120px; height: 120px; object-fit: cover;"
-                                 id="previewImage"
-                                 alt="Anteprima">
+                            <img src="/Profilo/Immagine?v=@DateTime.Now.Ticks" 
+                                class="rounded-circle mb-3" 
+                                style="width: 120px; height: 120px; object-fit: cover;"
+                                id="previewImage"
+                                onerror="this.src='@identitaCorrente.GravatarUrl'"
+                                alt="Anteprima">
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Seleziona nuova immagine</label>

@@ -50,7 +50,6 @@ namespace Template.Web.Areas.Responsabile.Controllers
             if (progetto == null)
                 return NotFound();
 
-            // Recupera tutti i dipendenti per l'assegnazione
             var dipendenti = await _context.Dipendenti.ToListAsync();
 
             var model = new ProgettoDettaglioViewModel
@@ -140,6 +139,53 @@ namespace Template.Web.Areas.Responsabile.Controllers
 
             return Json(progetti);
         }
+
+        // API: Ottieni dipendenti assegnati a un progetto
+        [HttpGet]
+        public virtual async Task<IActionResult> GetDipendentiAssegnati(int progettoId)
+        {
+            var assegnati = await _context.AssegnazioniDipendentiProgetti
+                .Where(a => a.ProgettoId == progettoId && a.Attivo)
+                .Select(a => a.DipendenteId)
+                .ToListAsync();
+
+            var dipendenti = await _context.Dipendenti
+                .Select(d => new
+                {
+                    id = d.Id,
+                    nome = d.Nome + " " + d.Cognome,
+                    assegnato = assegnati.Contains(d.Id)
+                })
+                .OrderBy(d => d.nome)
+                .ToListAsync();
+
+            return Ok(dipendenti);
+        }
+
+        // API: Salva assegnazioni per un progetto
+        [HttpPost]
+        public virtual async Task<IActionResult> SalvaAssegnazioni([FromBody] SalvaAssegnazioniRequest request)
+        {
+            // Rimuovi tutte le assegnazioni attuali
+            var assegnazioniEsistenti = _context.AssegnazioniDipendentiProgetti
+                .Where(a => a.ProgettoId == request.ProgettoId);
+            
+            _context.AssegnazioniDipendentiProgetti.RemoveRange(assegnazioniEsistenti);
+
+            // Crea nuove assegnazioni
+            var nuoveAssegnazioni = request.DipendentiIds.Select(dipId => new AssegnazioneDipendenteProgetto
+            {
+                ProgettoId = request.ProgettoId,
+                DipendenteId = dipId,
+                DataAssegnazione = DateTime.Now,
+                Attivo = true
+            }).ToList();
+
+            _context.AssegnazioniDipendentiProgetti.AddRange(nuoveAssegnazioni);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Assegnazioni aggiornate con successo!" });
+        }
     }
 
     // ViewModels
@@ -150,11 +196,12 @@ namespace Template.Web.Areas.Responsabile.Controllers
         public List<Progetto> Progetti { get; set; }
     }
 
-   public class ProgettoDettaglioViewModel
-{
-    public Progetto Progetto { get; set; }
-    public List<Template.Entities.Dipendente> Dipendenti { get; set; }
-}
+    public class ProgettoDettaglioViewModel
+    {
+        public Progetto Progetto { get; set; }
+        public List<Template.Entities.Dipendente> Dipendenti { get; set; }
+    }
+
     // Request Models
     public class ProgettoCreateRequest
     {
@@ -178,5 +225,11 @@ namespace Template.Web.Areas.Responsabile.Controllers
         public string ReferenteCliente { get; set; }
         public string ReferenteInterno { get; set; }
         public bool Completato { get; set; }
+    }
+
+    public class SalvaAssegnazioniRequest
+    {
+        public int ProgettoId { get; set; }
+        public List<int> DipendentiIds { get; set; }
     }
 }

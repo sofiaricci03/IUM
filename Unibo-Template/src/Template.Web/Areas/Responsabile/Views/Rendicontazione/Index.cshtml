@@ -1,11 +1,11 @@
 @model Template.Web.Areas.Responsabile.Controllers.RendicontazioneViewModel
 @{
-    ViewData["Title"] = "Rendicontazione Settimanale – Responsabile";
+    ViewData["Title"] = "Rendicontazione – Responsabile";
 }
 
 @section pageTitle {
     <div class="onit-page-title">
-        <h1><i class="fa-solid fa-clipboard-list"></i> Rendicontazione settimanale</h1>
+        <h1><i class="fa-solid fa-clipboard-list"></i> Rendicontazione</h1>
     </div>
 }
 
@@ -31,9 +31,10 @@
                     </a>
                 </li>
                 <li>
-                    <a asp-area="Responsabile"
-                    asp-controller="Rendicontazione"
-                    asp-action="Index">
+                    <a class="active"
+                       asp-area="Responsabile"
+                       asp-controller="Rendicontazione"
+                       asp-action="Index">
                         <i class="fa-solid fa-clipboard-list"></i> Rendicontazione
                     </a>
                 </li>
@@ -57,89 +58,151 @@
         <!-- MAIN CONTENT -->
         <div class="col-10">
 
-            <!-- Header con navigazione mese -->
-            <div class="onit-toolbar d-flex justify-content-between align-items-center mb-4">
-                <h3 class="fw-bold mb-0" id="titoloMese">Caricamento...</h3>
+            <!-- TABS -->
+            <ul class="nav nav-tabs mb-4" id="rendicontazioneTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="approvazioni-tab" data-bs-toggle="tab" 
+                            data-bs-target="#approvazioni" type="button" role="tab">
+                        <i class="fa-solid fa-clipboard-check"></i> Approvazioni
+                        <span class="badge bg-danger ms-2" id="badgeDaApprovare" style="display:none;">0</span>
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="mieattvita-tab" data-bs-toggle="tab" 
+                            data-bs-target="#mieattivita" type="button" role="tab">
+                        <i class="fa-solid fa-user"></i> Le mie attività
+                    </button>
+                </li>
+            </ul>
+
+            <!-- TAB CONTENT -->
+            <div class="tab-content" id="rendicontazioneTabContent">
                 
-                <div class="d-flex align-items-center gap-3">
-                    <!-- Indicatori legenda -->
-                    <div class="d-flex gap-3 me-4">
-                        <span class="badge-legenda badge-completo">
-                            <i class="fa-solid fa-circle-check"></i> Completo
-                        </span>
-                        <span class="badge-legenda badge-parziale">
-                            <i class="fa-solid fa-triangle-exclamation"></i> Parziale
-                        </span>
-                        <span class="badge-legenda badge-mancante">
-                            <i class="fa-solid fa-circle-xmark"></i> Mancante
-                        </span>
-                        <span class="badge-legenda badge-congedo">
-                            <i class="fa-solid fa-plane-departure"></i> Congedo
-                        </span>
+                <!-- TAB 1: APPROVAZIONI -->
+                <div class="tab-pane fade show active" id="approvazioni" role="tabpanel">
+                    
+                    <div class="onit-toolbar mb-3">
+                        <h3 class="fw-bold">Timesheet da approvare</h3>
                     </div>
 
-                    <div class="btn-group">
-                        <button id="btnMesePrecedente" class="btn btn-outline-secondary">
-                            <i class="fa-solid fa-chevron-left"></i>
-                        </button>
-                        <button id="btnMeseCorrente" class="btn btn-outline-primary">
-                            Oggi
-                        </button>
-                        <button id="btnMeseSuccessivo" class="btn btn-outline-secondary">
-                            <i class="fa-solid fa-chevron-right"></i>
-                        </button>
+                    <!-- Lista rendicontazioni -->
+                    <div id="listaRendicontazioni">
+                        <div class="text-center py-5">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Caricamento...</span>
+                            </div>
+                        </div>
                     </div>
-                </div>
-            </div>
 
-            <!-- Alert info -->
-            <div class="alert alert-info d-flex align-items-center mb-3">
-                <i class="fa-solid fa-lightbulb fa-2x me-3"></i>
-                <div>
-                    <strong>Suggerimento:</strong> Clicca su un giorno per aggiungere o modificare le tue attività. 
-                    Assicurati che tutti i giorni lavorativi siano in <strong class="text-success">verde</strong> 
-                    prima della fine del mese!
                 </div>
-            </div>
 
-            <!-- Riepilogo mese -->
-            <div class="row mb-3">
-                <div class="col-md-3">
-                    <div class="onit-card p-3 text-center">
-                        <h2 class="mb-0 text-success" id="giorniCompleti">0</h2>
-                        <small class="text-muted">Giorni completi</small>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="onit-card p-3 text-center">
-                        <h2 class="mb-0 text-warning" id="giorniParziali">0</h2>
-                        <small class="text-muted">Giorni parziali</small>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="onit-card p-3 text-center">
-                        <h2 class="mb-0 text-danger" id="giorniMancanti">0</h2>
-                        <small class="text-muted">Giorni mancanti</small>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="onit-card p-3 text-center">
-                        <h2 class="mb-0 text-primary" id="oreTotali">0</h2>
-                        <small class="text-muted">Ore totali</small>
-                    </div>
-                </div>
-            </div>
+                <!-- TAB 2: LE MIE ATTIVITÀ -->
+                <div class="tab-pane fade" id="mieattivita" role="tabpanel">
+                    
+                    <!-- Header con navigazione mese -->
+                    <div class="onit-toolbar d-flex justify-content-between align-items-center mb-4">
+                        <h3 class="fw-bold mb-0" id="titoloMese">Caricamento...</h3>
+                        
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="d-flex gap-3 me-4">
+                                <span class="badge-legenda badge-completo">
+                                    <i class="fa-solid fa-circle-check"></i> Completo
+                                </span>
+                                <span class="badge-legenda badge-parziale">
+                                    <i class="fa-solid fa-triangle-exclamation"></i> Parziale
+                                </span>
+                                <span class="badge-legenda badge-mancante">
+                                    <i class="fa-solid fa-circle-xmark"></i> Mancante
+                                </span>
+                                <span class="badge-legenda badge-congedo">
+                                    <i class="fa-solid fa-plane-departure"></i> Congedo
+                                </span>
+                            </div>
 
-            <!-- Griglia giorni del mese -->
-            <div class="onit-card p-4">
-                <div class="row g-2" id="grigliaGiorni">
-                    <!-- I giorni verranno inseriti qui via JavaScript -->
+                            <div class="btn-group">
+                                <button id="btnMesePrecedente" class="btn btn-outline-secondary">
+                                    <i class="fa-solid fa-chevron-left"></i>
+                                </button>
+                                <button id="btnMeseCorrente" class="btn btn-outline-primary">
+                                    Oggi
+                                </button>
+                                <button id="btnMeseSuccessivo" class="btn btn-outline-secondary">
+                                    <i class="fa-solid fa-chevron-right"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Riepilogo mese -->
+                    <div class="row mb-3">
+                        <div class="col-md-3">
+                            <div class="onit-card p-3 text-center">
+                                <h2 class="mb-0 text-success" id="giorniCompleti">0</h2>
+                                <small class="text-muted">Giorni completi</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="onit-card p-3 text-center">
+                                <h2 class="mb-0 text-warning" id="giorniParziali">0</h2>
+                                <small class="text-muted">Giorni parziali</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="onit-card p-3 text-center">
+                                <h2 class="mb-0 text-danger" id="giorniMancanti">0</h2>
+                                <small class="text-muted">Giorni mancanti</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="onit-card p-3 text-center">
+                                <h2 class="mb-0 text-primary" id="oreTotali">0</h2>
+                                <small class="text-muted">Ore totali</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Griglia giorni del mese -->
+                    <div class="onit-card p-4">
+                        <div class="row g-2" id="grigliaGiorni"></div>
+                    </div>
+
                 </div>
             </div>
 
         </div>
     </div>
 </div>
+
+<!-- MODALE DETTAGLIO RENDICONTAZIONE -->
+<div class="modal fade" id="modaleDettaglio" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content onit-card">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fa-solid fa-calendar-days"></i> Dettaglio rendicontazione
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="dettaglioContent">
+                    <div class="text-center py-4">
+                        <div class="spinner-border text-primary"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Chiudi</button>
+                <button type="button" class="btn btn-danger" onclick="respingiRendicontazione()">
+                    <i class="fa-solid fa-xmark"></i> Respingi
+                </button>
+                <button type="button" class="btn btn-success" onclick="approvaRendicontazione()">
+                    <i class="fa-solid fa-check"></i> Approva
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section styles {
 <style>
     /* Status colors */
@@ -163,7 +226,6 @@
         border-color: #17a2b8;
     }
 
-    /* Giorno card */
     .giorno-card {
         aspect-ratio: 1;
         border-radius: 12px;
@@ -199,21 +261,9 @@
         margin-top: 0.5rem;
     }
 
-    .giorno-card .badge-attivita {
-        position: absolute;
-        top: 8px;
-        right: 8px;
-        background: rgba(255,255,255,0.3);
-        color: white;
-        font-size: 0.7rem;
-        padding: 2px 6px;
-        border-radius: 10px;
-    }
-
-    /* Badge legenda */
     .badge-legenda {
         display: inline-flex;
-        align-items: center;
+        align-items-center;
         gap: 5px;
         padding: 6px 12px;
         border-radius: 20px;
@@ -241,7 +291,6 @@
         color: #0c5460;
     }
 
-    /* Pulse animation per giorni mancanti */
     @@keyframes pulse-red {
         0%, 100% { box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         50% { box-shadow: 0 0 20px rgba(220, 53, 69, 0.5); }
@@ -250,6 +299,17 @@
     .status-mancante {
         animation: pulse-red 2s infinite;
     }
+
+    /* Rendicontazioni card */
+    .rend-card {
+        transition: all 0.2s;
+        cursor: pointer;
+    }
+
+    .rend-card:hover {
+        transform: translateX(5px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
 </style>
 }
 
@@ -257,8 +317,161 @@
 <script>
     let meseCorrente = new Date().getMonth();
     let annoCorrente = new Date().getFullYear();
+    let rendicontazioneCorrente = null;
 
-    // Carica dati del mese
+    // ===============================
+    // TAB APPROVAZIONI
+    // ===============================
+
+    async function caricaRendicontazioni() {
+        const response = await fetch('/Responsabile/Rendicontazione/GetRendicontazioniDaApprovare');
+        const data = await response.json();
+        
+        const container = document.getElementById('listaRendicontazioni');
+        
+        if (data.rendicontazioni.length === 0) {
+            container.innerHTML = `
+                <div class="onit-card p-5 text-center">
+                    <i class="fa-solid fa-clipboard-check fa-3x text-muted mb-3"></i>
+                    <h4>Nessuna rendicontazione da approvare</h4>
+                    <p class="text-muted">Tutte le rendicontazioni sono state processate</p>
+                </div>
+            `;
+            document.getElementById('badgeDaApprovare').style.display = 'none';
+        } else {
+            container.innerHTML = '';
+            data.rendicontazioni.forEach(r => {
+                const card = document.createElement('div');
+                card.className = 'onit-card p-3 mb-2 rend-card';
+                card.onclick = () => apriDettaglio(r.id);
+                card.innerHTML = `
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="mb-1"><i class="fa-solid fa-user"></i> ${r.dipendente}</h5>
+                            <p class="text-muted mb-0">
+                                <i class="fa-solid fa-calendar"></i> ${r.meseNome}
+                                <span class="ms-3"><i class="fa-solid fa-clock"></i> Inviato il ${r.dataInvio}</span>
+                            </p>
+                        </div>
+                        <button class="btn btn-primary">
+                            <i class="fa-solid fa-eye"></i> Visualizza
+                        </button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+            
+            document.getElementById('badgeDaApprovare').textContent = data.rendicontazioni.length;
+            document.getElementById('badgeDaApprovare').style.display = 'inline-block';
+        }
+    }
+
+    async function apriDettaglio(rendicontazioneId) {
+        rendicontazioneCorrente = rendicontazioneId;
+        
+        const response = await fetch(`/Responsabile/Rendicontazione/GetDettaglioRendicontazione?rendicontazioneId=${rendicontazioneId}`);
+        const data = await response.json();
+        
+        const content = document.getElementById('dettaglioContent');
+        content.innerHTML = `
+            <div class="mb-4">
+                <h4>${data.dipendente}</h4>
+                <p class="text-muted">Periodo: ${data.mese} - Inviato il ${data.dataInvio}</p>
+                <h5>Totale ore: <span class="text-primary">${data.oreTotali}h</span></h5>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Orario</th>
+                            <th>Ore</th>
+                            <th>Progetto</th>
+                            <th>Cliente</th>
+                            <th>Attività</th>
+                            <th>Descrizione</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${data.dettagli.map(d => `
+                            <tr>
+                                <td>${d.data}</td>
+                                <td>${d.oraInizio} - ${d.oraFine}</td>
+                                <td><strong>${d.ore.toFixed(1)}h</strong></td>
+                                <td>${d.progetto}</td>
+                                <td>${d.cliente}</td>
+                                <td>${d.attivita}</td>
+                                <td>${d.descrizione || '-'}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `;
+        
+        new bootstrap.Modal(document.getElementById('modaleDettaglio')).show();
+    }
+
+    async function approvaRendicontazione() {
+        if (!confirm('Confermi l\'approvazione di questa rendicontazione?')) return;
+        
+        try {
+            const response = await fetch('/Responsabile/Rendicontazione/Approva', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    rendicontazioneId: rendicontazioneCorrente,
+                    note: ''
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                alert(data.message);
+                bootstrap.Modal.getInstance(document.getElementById('modaleDettaglio')).hide();
+                caricaRendicontazioni();
+            } else {
+                alert('Errore durante l\'approvazione');
+            }
+        } catch (error) {
+            alert('Errore di connessione');
+        }
+    }
+
+    async function respingiRendicontazione() {
+        const note = prompt('Motivo del respingimento (obbligatorio):');
+        if (!note) return;
+        
+        try {
+            const response = await fetch('/Responsabile/Rendicontazione/Respingi', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    rendicontazioneId: rendicontazioneCorrente,
+                    note: note
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                alert(data.message);
+                bootstrap.Modal.getInstance(document.getElementById('modaleDettaglio')).hide();
+                caricaRendicontazioni();
+            } else {
+                alert(data.error || 'Errore durante il respingimento');
+            }
+        } catch (error) {
+            alert('Errore di connessione');
+        }
+    }
+
+    // ===============================
+    // TAB MIE ATTIVITÀ
+    // ===============================
+
     async function caricaMese() {
         const response = await fetch(`/Responsabile/Rendicontazione/GetStatoMese?anno=${annoCorrente}&mese=${meseCorrente + 1}`);
         const data = await response.json();
@@ -268,7 +481,6 @@
         aggiornaStatistiche(data.giorni);
     }
 
-    // Aggiorna titolo mese
     function aggiornaIntestazione() {
         const data = new Date(annoCorrente, meseCorrente, 1);
         const nomeMese = data.toLocaleDateString('it-IT', { month: 'long', year: 'numeric' });
@@ -276,7 +488,6 @@
             nomeMese.charAt(0).toUpperCase() + nomeMese.slice(1);
     }
 
-    // Renderizza griglia giorni
     function renderizzaGiorni(giorni) {
         const container = document.getElementById('grigliaGiorni');
         container.innerHTML = '';
@@ -287,16 +498,9 @@
             
             const card = document.createElement('div');
             card.className = `giorno-card ${g.colorClass} d-flex flex-column align-items-center justify-content-center p-3`;
-            card.onclick = () => apriGiorno(g.data);
+            card.onclick = () => window.location.href = `/Responsabile/Dashboard?date=${g.data}`;
             
-            if (g.numeroAttivita > 0) {
-                const badge = document.createElement('span');
-                badge.className = 'badge-attivita';
-                badge.innerHTML = `<i class="fa-solid fa-list-check"></i> ${g.numeroAttivita}`;
-                card.appendChild(badge);
-            }
-
-            card.innerHTML += `
+            card.innerHTML = `
                 <div class="giorno-settimana">${g.giornoSettimana}</div>
                 <div class="giorno-numero">${g.dataFormattata.split('/')[0]}</div>
                 <div class="giorno-ore">${g.ore > 0 ? g.ore + 'h' : '—'}</div>
@@ -307,7 +511,6 @@
         });
     }
 
-    // Aggiorna statistiche
     function aggiornaStatistiche(giorni) {
         const completi = giorni.filter(g => g.stato === 'Completo').length;
         const parziali = giorni.filter(g => g.stato === 'Parziale').length;
@@ -320,14 +523,7 @@
         document.getElementById('oreTotali').textContent = Math.round(oreTot);
     }
 
-    // Apri giorno per inserire attività (redirect al calendario)
-    function apriGiorno(data) {
-        // Reindirizza alla dashboard Attività con focus sul giorno
-        window.location.href = `/Responsabile/Dashboard?date=${data}`;
-    }
-
-    // Navigazione mesi
-    document.getElementById('btnMesePrecedente').addEventListener('click', () => {
+    document.getElementById('btnMesePrecedente')?.addEventListener('click', () => {
         meseCorrente--;
         if (meseCorrente < 0) {
             meseCorrente = 11;
@@ -336,7 +532,7 @@
         caricaMese();
     });
 
-    document.getElementById('btnMeseSuccessivo').addEventListener('click', () => {
+    document.getElementById('btnMeseSuccessivo')?.addEventListener('click', () => {
         meseCorrente++;
         if (meseCorrente > 11) {
             meseCorrente = 0;
@@ -345,16 +541,24 @@
         caricaMese();
     });
 
-    document.getElementById('btnMeseCorrente').addEventListener('click', () => {
+    document.getElementById('btnMeseCorrente')?.addEventListener('click', () => {
         const oggi = new Date();
         meseCorrente = oggi.getMonth();
         annoCorrente = oggi.getFullYear();
         caricaMese();
     });
 
-    // Inizializzazione
+    // ===============================
+    // INIZIALIZZAZIONE
+    // ===============================
+
     document.addEventListener('DOMContentLoaded', () => {
-        caricaMese();
+        caricaRendicontazioni();
+        
+        // Quando switcha al tab "Le mie attività"
+        document.getElementById('mieattvita-tab').addEventListener('shown.bs.tab', () => {
+            caricaMese();
+        });
     });
 </script>
 }

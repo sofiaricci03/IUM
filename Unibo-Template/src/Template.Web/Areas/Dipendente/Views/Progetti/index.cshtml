@@ -1,55 +1,263 @@
+@model Template.Web.Areas.Dipendente.Controllers.ProgettiIndexViewModel
 @{
-    ViewData["Title"] = "Progetti";
+    ViewData["Title"] = "Progetti – Dipendente";
 }
 
-<div class="error-wrapper text-center">
+@section pageTitle {
+    <div class="onit-page-title">
+        <h1><i class="fa-solid fa-diagram-project"></i> Progetti</h1>
+    </div>
+}
 
-    <img src="https://i.imgur.com/qIufhof.png" class="error-img" />
+<div class="container-fluid onit-page-content">
 
-    <h1 class="mt-4">Oops! I progetti stanno ancora lavorando su... se stessi 😅</h1>
+    <div class="row">
 
-    <p class="lead mt-3">
-        Stiamo costruendo qualcosa di fantastico qui.<br />
-        Ma sembra che il team dei progetti si sia preso una pausa caffè ☕️.
-    </p>
+        <!-- SIDEBAR DIPENDENTE -->
+        <div class="col-2 onit-sidebar">
+            <ul class="onit-sidebar-menu">
+                <li>
+                    <a asp-area="Dipendente"
+                       asp-controller="Dashboard"
+                       asp-action="Index">
+                        <i class="fa-solid fa-calendar-check"></i> Attività
+                    </a>
+                </li>
+                <li>
+                    <a class="active"
+                       asp-area="Dipendente"
+                       asp-controller="Progetti"
+                       asp-action="Index">
+                        <i class="fa-solid fa-diagram-project"></i> Progetti
+                    </a>
+                </li>
+                <li>
+                    <a asp-area="Dipendente"
+                       asp-controller="Rendicontazione"
+                       asp-action="Index">
+                        <i class="fa-solid fa-clipboard-list"></i> Rendicontazione
+                    </a>
+                </li>
+                <li>
+                    <a asp-area="Dipendente"
+                       asp-controller="Congedo"
+                       asp-action="Index">
+                        <i class="fa-solid fa-plane-departure"></i> Congedo
+                    </a>
+                </li>
+                <li>
+                    <a asp-area="Dipendente"
+                       asp-controller="Contratto"
+                       asp-action="Index">
+                        <i class="fa-solid fa-file-contract"></i> Contratto
+                    </a>
+                </li>
+            </ul>
+        </div>
 
-    <button class="btn btn-primary mt-4" onclick="window.location.href='/Dipendente/Dashboard'">
-        Torna alla Dashboard
-    </button>
+        <!-- MAIN CONTENT -->
+        <div class="col-10">
 
+            <!-- Toolbar -->
+            <div class="onit-toolbar d-flex justify-content-between align-items-center mb-3">
+                <h3 class="fw-bold mb-0">I Miei Progetti</h3>
+                <div class="d-flex gap-2">
+                    <input type="text" id="searchInput" class="form-control" style="width: 300px;" placeholder="Cerca progetto o cliente...">
+                    <select id="filtroStato" class="form-select" style="width: 200px;">
+                        <option value="">Tutti i progetti</option>
+                        <option value="attivi">In corso</option>
+                        <option value="completati">Completati</option>
+                    </select>
+                    <button class="btn btn-secondary" onclick="resetFiltri()">
+                        <i class="fa-solid fa-rotate-right"></i> Reset
+                    </button>
+                </div>
+            </div>
+
+            <!-- Alert info -->
+            <div class="alert alert-info mb-3">
+                <i class="fa-solid fa-info-circle"></i> 
+                <strong>Visualizzazione progetti:</strong> Qui puoi consultare tutti i progetti aziendali. Per inserire ore lavorate, vai nella sezione <a href="/Dipendente/Dashboard" class="alert-link">Attività</a>.
+            </div>
+
+            <!-- Lista Progetti -->
+            <div class="row" id="progettiContainer">
+                @if (Model.Progetti != null && Model.Progetti.Any())
+                {
+                    @foreach (var progetto in Model.Progetti)
+                    {
+                        <div class="col-md-6 mb-3 progetto-card" 
+                             data-cliente="@progetto.Cliente.ToLower()" 
+                             data-nome="@progetto.Nome.ToLower()"
+                             data-completato="@progetto.Completato.ToString().ToLower()">
+                            <div class="onit-card p-3 h-100">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <h5 class="mb-0">
+                                        <i class="fa-solid fa-briefcase text-primary"></i> @progetto.Nome
+                                    </h5>
+                                    @if (progetto.Completato)
+                                    {
+                                        <span class="badge bg-success">
+                                            <i class="fa-solid fa-circle-check"></i> Completato
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        var oggi = DateTime.Now.Date;
+                                        var scadenza = progetto.DataScadenza.Date;
+                                        var giorniMancanti = (scadenza - oggi).Days;
+                                        
+                                        if (giorniMancanti < 0)
+                                        {
+                                            <span class="badge bg-danger badge-scaduto">
+                                                <i class="fa-solid fa-circle-exclamation"></i> Scaduto
+                                            </span>
+                                        }
+                                        else if (giorniMancanti <= 7)
+                                        {
+                                            <span class="badge bg-warning text-dark">
+                                                <i class="fa-solid fa-clock"></i> In scadenza (@giorniMancanti gg)
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-info">
+                                                <i class="fa-solid fa-circle-play"></i> In corso
+                                            </span>
+                                        }
+                                    }
+                                </div>
+
+                                <p class="text-muted mb-2">
+                                    <i class="fa-solid fa-building"></i> <strong>Cliente:</strong> @progetto.Cliente
+                                </p>
+
+                                @if (!string.IsNullOrEmpty(progetto.Descrizione))
+                                {
+                                    <p class="small text-secondary mb-2">@progetto.Descrizione</p>
+                                }
+
+                                <div class="row mt-2 small">
+                                    <div class="col-6">
+                                        <i class="fa-solid fa-calendar-plus"></i> 
+                                        <strong>Inizio:</strong> @progetto.DataInizio.ToString("dd/MM/yyyy")
+                                    </div>
+                                    <div class="col-6">
+                                        <i class="fa-solid fa-calendar-xmark"></i> 
+                                        <strong>Scadenza:</strong> @progetto.DataScadenza.ToString("dd/MM/yyyy")
+                                    </div>
+                                </div>
+
+                                @if (!string.IsNullOrEmpty(progetto.ReferenteInterno))
+                                {
+                                    <p class="small mt-2 mb-0">
+                                        <i class="fa-solid fa-user"></i> <strong>Ref. Interno:</strong> @progetto.ReferenteInterno
+                                    </p>
+                                }
+
+                                @if (!string.IsNullOrEmpty(progetto.ReferenteCliente))
+                                {
+                                    <p class="small mb-0">
+                                        <i class="fa-solid fa-user-tie"></i> <strong>Ref. Cliente:</strong> @progetto.ReferenteCliente
+                                    </p>
+                                }
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="col-12">
+                        <div class="onit-card p-5 text-center">
+                            <i class="fa-solid fa-folder-open fa-3x text-muted mb-3"></i>
+                            <h4>Nessun progetto disponibile</h4>
+                            <p class="text-muted">Al momento non ci sono progetti nel sistema</p>
+                        </div>
+                    </div>
+                }
+            </div>
+
+        </div>
+    </div>
 </div>
 
+@section styles {
 <style>
-    .error-wrapper {
-        margin-top: 80px;
-        padding: 40px;
-        animation: fadeIn 0.9s ease-in-out;
+    .progetto-card {
+        transition: transform 0.2s;
     }
 
-    .error-img {
-        width: 260px;
-        opacity: 0.9;
-        animation: float 2.5s infinite ease-in-out;
+    .progetto-card:hover {
+        transform: translateY(-2px);
     }
 
-    @@keyframes float {
-        0%   { transform: translateY(0px); }
-        50%  { transform: translateY(-12px); }
-        100% { transform: translateY(0px); }
+    /* Badge stati progetto */
+    .badge.bg-danger {
+        background-color: #dc3545 !important;
     }
-
-    @@keyframes fadeIn {
-        from { opacity: 0; transform: translateY(20px); }
-        to   { opacity: 1; transform: translateY(0); }
+    
+    .badge.bg-warning {
+        background-color: #ffc107 !important;
+        color: #000 !important;
     }
-
-    h1 {
-        font-weight: 700;
-        color: #444;
+    
+    .badge.bg-info {
+        background-color: #0dcaf0 !important;
     }
-
-    .lead {
-        font-size: 1.25rem;
-        color: #666;
+    
+    .badge.bg-success {
+        background-color: #28a745 !important;
+    }
+    
+    /* Animazione per progetti scaduti */
+    .badge-scaduto {
+        animation: pulse-scaduto 2s infinite;
+    }
+    
+    @@keyframes pulse-scaduto {
+        0%, 100% { 
+            box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7);
+        }
+        50% { 
+            box-shadow: 0 0 0 8px rgba(220, 53, 69, 0);
+        }
     }
 </style>
+}
+
+@section scripts {
+<script>
+    // Filtro ricerca
+    document.getElementById('searchInput').addEventListener('input', filtraProgetti);
+    document.getElementById('filtroStato').addEventListener('change', filtraProgetti);
+
+    function filtraProgetti() {
+        const search = document.getElementById('searchInput').value.toLowerCase();
+        const stato = document.getElementById('filtroStato').value;
+        const cards = document.querySelectorAll('.progetto-card');
+
+        cards.forEach(card => {
+            const nome = card.getAttribute('data-nome');
+            const cliente = card.getAttribute('data-cliente');
+            const completato = card.getAttribute('data-completato') === 'true';
+
+            let showSearch = search === '' || nome.includes(search) || cliente.includes(search);
+            let showStato = true;
+
+            if (stato === 'attivi') {
+                showStato = !completato;
+            } else if (stato === 'completati') {
+                showStato = completato;
+            }
+
+            card.style.display = (showSearch && showStato) ? '' : 'none';
+        });
+    }
+
+    function resetFiltri() {
+        document.getElementById('searchInput').value = '';
+        document.getElementById('filtroStato').value = '';
+        filtraProgetti();
+    }
+</script>
+}

@@ -279,7 +279,7 @@
         aggiornaIntestazione();
         renderizzaGiorni(data.giorni);
         aggiornaStatistiche(data.giorni);
-        aggiornaStatoRendicontazione(data); // AGGIUNTO QUESTA RIGA
+        aggiornaStatoRendicontazione(data);
     }
 
     // Aggiorna titolo mese
@@ -418,7 +418,7 @@
         }
     }
 
-    // Apri giorno per inserire attività (redirect al calendario)
+    // Apre giorno per inserire attività (redirect al calendario)
     function apriGiorno(data) {
         // Reindirizza alla dashboard Attività con focus sul giorno
         window.location.href = `/Dipendente/Dashboard?date=${data}`;

@@ -80,6 +80,9 @@ function apriPopupPerData(dateStr) {
 
     document.getElementById("checkTrasferta").checked = false;
     document.getElementById("boxTrasferta").style.display = "none";
+    document.getElementById("spesaTrasporto").value = "";
+    document.getElementById("spesaVitto").value = "";
+    document.getElementById("spesaAlloggio").value = "";
 
     document.getElementById("btnSalva").removeAttribute("data-id");
     document.getElementById("btnSalva").setAttribute("data-date", dateStr);
@@ -99,24 +102,30 @@ document.getElementById("btnSalva").addEventListener("click", async function () 
 
     const id = this.getAttribute("data-id");
     const giorno = this.getAttribute("data-date");
+    
+    // Ottieni progettoId dal select
+    const progettoSelect = document.getElementById("progetto");
+    const progettoId = progettoSelect.value;
+    const progettoNome = progettoSelect.options[progettoSelect.selectedIndex]?.text || "";
 
     let dto = {
         id: id ? parseInt(id) : 0,
         giorno: giorno,
         oraInizio: document.getElementById("oraInizio").value,
         oraFine: document.getElementById("oraFine").value,
-        progetto: document.getElementById("progetto").value,
+        progettoId: progettoId ? parseInt(progettoId) : 0,
+        progetto: progettoNome,
         cliente: document.getElementById("cliente").value,
         attivita: document.getElementById("attivita").value,
-        descrizione: document.getElementById("descrizione").value,
+        descrizione: document.getElementById("descrizione").value || "",
         trasferta: document.getElementById("checkTrasferta").checked,
-        spesaTrasporto: document.getElementById("spesaTrasporto").value || 0,
-        spesaCibo: document.getElementById("spesaVitto").value || 0,
-        spesaAlloggio: document.getElementById("spesaAlloggio").value || 0
+        spesaTrasporto: parseFloat(document.getElementById("spesaTrasporto").value) || 0,
+        spesaCibo: parseFloat(document.getElementById("spesaVitto").value) || 0,
+        spesaAlloggio: parseFloat(document.getElementById("spesaAlloggio").value) || 0
     };
 
     // Validazione
-    if (!dto.progetto || !dto.cliente || !dto.attivita) {
+    if (!dto.progettoId || !dto.cliente || !dto.attivita) {
         alert("Compila tutti i campi obbligatori!");
         return;
     }
@@ -131,36 +140,30 @@ document.getElementById("btnSalva").addEventListener("click", async function () 
         ? `/${currentArea}/CalendarioApi/UpdateAttivita`
         : `/${currentArea}/CalendarioApi/AddAttivita`;
 
-    const res = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(dto)
-    });
+    try {
+        const res = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(dto)
+        });
 
-    if (res.ok) {
-        const modal = bootstrap.Modal.getInstance(document.getElementById("modaleOre"));
-        modal.hide();
+        const data = await res.json();
 
-        calendar.removeAllEvents();
+        if (res.ok) {
+            const modal = bootstrap.Modal.getInstance(document.getElementById("modaleOre"));
+            modal.hide();
 
-        fetch(`/${currentArea}/CalendarioApi/GetAttivita`)
-            .then(r => r.json())
-            .then(lista => {
-                lista.forEach(ev => {
-                    calendar.addEvent({
-                        id: ev.id,
-                        title: `${ev.progetto} - ${ev.attivita}`,
-                        start: ev.start,
-                        end: ev.end,
-                        backgroundColor: getColorForProject(ev.progetto),
-                        borderColor: getColorForProject(ev.progetto),
-                        extendedProps: ev
-                    });
-                });
-            });
-
-    } else {
-        alert("Errore nel salvataggio.");
+            // Ricarica calendario
+            calendar.removeAllEvents();
+            caricaEventi();
+            
+            alert(data.message || "Attività salvata!");
+        } else {
+            alert(data.error || "Errore nel salvataggio");
+        }
+    } catch (error) {
+        console.error("Errore:", error);
+        alert("Errore di connessione");
     }
 });
 
@@ -181,9 +184,44 @@ document.getElementById("btnElimina").addEventListener("click", async function (
     });
 
     if (res.ok) {
-        location.reload();
+        const modal = bootstrap.Modal.getInstance(document.getElementById("modaleOre"));
+        modal.hide();
+        
+        calendar.removeAllEvents();
+        caricaEventi();
     }
 });
+
+// ----------------------
+//  CARICA EVENTI NEL CALENDARIO
+// ----------------------
+function caricaEventi() {
+    fetch(`/${currentArea}/CalendarioApi/GetAttivita`)
+        .then(r => r.json())
+        .then(lista => {
+            lista.forEach(ev => {
+                calendar.addEvent({
+                    id: ev.id,
+                    title: `${ev.progetto} - ${ev.attivita}`,
+                    start: ev.start,
+                    end: ev.end,
+                    backgroundColor: getColorForProject(ev.progetto),
+                    borderColor: getColorForProject(ev.progetto),
+                    extendedProps: {
+                        progettoId: ev.progettoId || 0,
+                        progetto: ev.progetto,
+                        cliente: ev.cliente,
+                        attivita: ev.attivita,
+                        descrizione: ev.descrizione,
+                        trasferta: ev.trasferta,
+                        spesaTrasporto: ev.spesaTrasporto,
+                        spesaCibo: ev.spesaCibo,
+                        spesaAlloggio: ev.spesaAlloggio
+                    }
+                });
+            });
+        });
+}
 
 // ----------------------
 //  INIZIALIZZAZIONE CALENDARIO
@@ -214,25 +252,43 @@ document.addEventListener("DOMContentLoaded", function () {
             const start = ev.start;
             const end = ev.end ?? new Date(start.getTime() + 60 * 60 * 1000);
 
-            // ORA CORRETTA (NO UTC!)
+            // Popola orari
             document.getElementById("oraInizio").value = formatTimeLocal(start);
             document.getElementById("oraFine").value = formatTimeLocal(end);
 
-            document.getElementById("progetto").value = ev.extendedProps.progetto ?? "";
-            document.getElementById("cliente").value = ev.extendedProps.cliente ?? "";
-            document.getElementById("attivita").value = ev.extendedProps.attivita ?? "";
-            document.getElementById("descrizione").value = ev.extendedProps.descrizione ?? "";
+            // Popola progetto (usa ID, non nome)
+            const progettoId = ev.extendedProps.progettoId || 0;
+            document.getElementById("progetto").value = progettoId;
+            
+            // Trigger change per auto-compilare cliente
+            const event = new Event('change');
+            document.getElementById("progetto").dispatchEvent(event);
 
-            document.getElementById("checkTrasferta").checked = ev.extendedProps.trasferta ?? false;
-            document.getElementById("boxTrasferta").style.display =
-                ev.extendedProps.trasferta ? "block" : "none";
+            // Popola altri campi
+            document.getElementById("attivita").value = ev.extendedProps.attivita || "";
+            document.getElementById("descrizione").value = ev.extendedProps.descrizione || "";
 
+            // Trasferta
+            const trasferta = ev.extendedProps.trasferta || false;
+            document.getElementById("checkTrasferta").checked = trasferta;
+            document.getElementById("boxTrasferta").style.display = trasferta ? "block" : "none";
+            
+            if (trasferta) {
+                document.getElementById("spesaTrasporto").value = ev.extendedProps.spesaTrasporto || 0;
+                document.getElementById("spesaVitto").value = ev.extendedProps.spesaCibo || 0;
+                document.getElementById("spesaAlloggio").value = ev.extendedProps.spesaAlloggio || 0;
+            }
+
+            // Imposta ID per modifica
             document.getElementById("btnSalva").setAttribute("data-id", ev.id);
             document.getElementById("btnSalva").setAttribute("data-date", start.toISOString().substring(0, 10));
 
             const btnElimina = document.getElementById("btnElimina");
             btnElimina.style.display = "inline-block";
             btnElimina.setAttribute("data-id", ev.id);
+
+            const lbl = document.getElementById("dataSelezionata");
+            if (lbl) lbl.textContent = start.toLocaleDateString("it-IT");
 
             new bootstrap.Modal(document.getElementById("modaleOre")).show();
         },
@@ -276,22 +332,8 @@ document.addEventListener("DOMContentLoaded", function () {
     calendar.render();
     aggiornaTitoloCalendario();
 
-    // Caricamento eventi con colori
-    fetch(`/${currentArea}/CalendarioApi/GetAttivita`)
-        .then(r => r.json())
-        .then(lista => {
-            lista.forEach(ev => {
-                calendar.addEvent({
-                    id: ev.id,
-                    title: `${ev.progetto} - ${ev.attivita}`,
-                    start: ev.start,
-                    end: ev.end,
-                    backgroundColor: getColorForProject(ev.progetto),
-                    borderColor: getColorForProject(ev.progetto),
-                    extendedProps: ev
-                });
-            });
-        });
+    // Carica eventi iniziali
+    caricaEventi();
 
     // Navigazione
     document.getElementById("prevBtn").addEventListener("click", () => {

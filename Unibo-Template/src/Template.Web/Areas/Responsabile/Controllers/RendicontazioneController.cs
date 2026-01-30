@@ -120,11 +120,139 @@ namespace Template.Web.Areas.Responsabile.Controllers
 
             return Json(new { giorni });
         }
+        // API: Ottiene lista rendicontazioni da approvare
+        [HttpGet]
+        public virtual async Task<IActionResult> GetRendicontazioniDaApprovare()
+        {
+            var rendicontazioni = await _ctx.RendicontazioniMensili
+                .Where(r => r.Stato == RendicontazioneStato.Inviata)
+                .OrderByDescending(r => r.DataInvio)
+                .ToListAsync();
+
+            var lista = new System.Collections.Generic.List<object>();
+
+            foreach (var r in rendicontazioni)
+            {
+                var dipendente = await _ctx.Dipendenti.FindAsync(r.DipendenteId);
+                
+                lista.Add(new
+                {
+                    id = r.Id,
+                    dipendenteId = r.DipendenteId,
+                    dipendente = $"{dipendente.Nome} {dipendente.Cognome}",
+                    anno = r.Anno,
+                    mese = r.Mese,
+                    meseNome = new DateTime(r.Anno, r.Mese, 1).ToString("MMMM yyyy", new System.Globalization.CultureInfo("it-IT")),
+                    dataInvio = r.DataInvio?.ToString("dd/MM/yyyy HH:mm"),
+                    stato = r.Stato.ToString()
+                });
+            }
+
+            return Json(new { rendicontazioni = lista });
+        }
+
+        // API: Dettaglio rendicontazione dipendente
+        [HttpGet]
+        public virtual async Task<IActionResult> GetDettaglioRendicontazione(int rendicontazioneId)
+        {
+            var rend = await _ctx.RendicontazioniMensili.FindAsync(rendicontazioneId);
+            if (rend == null) return NotFound();
+
+            var dipendente = await _ctx.Dipendenti.FindAsync(rend.DipendenteId);
+            
+            var primoGiorno = new DateTime(rend.Anno, rend.Mese, 1);
+            var ultimoGiorno = primoGiorno.AddMonths(1).AddDays(-1);
+
+            var attivita = await _ctx.AttivitaLavorative
+                .Where(a => a.DipendenteId == rend.DipendenteId && 
+                        a.Giorno >= primoGiorno && 
+                        a.Giorno <= ultimoGiorno)
+                .OrderBy(a => a.Giorno)
+                .ToListAsync();
+
+            var dettagli = attivita.Select(a => new
+            {
+                data = a.Giorno.ToString("dd/MM/yyyy"),
+                oraInizio = a.OraInizio.ToString(@"hh\:mm"),
+                oraFine = a.OraFine.ToString(@"hh\:mm"),
+                ore = (a.OraFine - a.OraInizio).TotalHours,
+                progetto = a.ProgettoNome,
+                cliente = a.Cliente,
+                attivita = a.Attivita,
+                descrizione = a.Descrizione
+            }).ToList();
+
+            var oreTotali = attivita.Sum(a => (a.OraFine - a.OraInizio).TotalHours);
+
+            return Json(new
+            {
+                dipendente = $"{dipendente.Nome} {dipendente.Cognome}",
+                mese = new DateTime(rend.Anno, rend.Mese, 1).ToString("MMMM yyyy", new System.Globalization.CultureInfo("it-IT")),
+                dataInvio = rend.DataInvio?.ToString("dd/MM/yyyy HH:mm"),
+                oreTotali = Math.Round(oreTotali, 1),
+                dettagli = dettagli
+            });
+        }
+
+        // API: Approva rendicontazione
+        [HttpPost]
+        public virtual async Task<IActionResult> Approva([FromBody] ApprovaRequest request)
+        {
+            var rend = await _ctx.RendicontazioniMensili.FindAsync(request.RendicontazioneId);
+            if (rend == null) return NotFound();
+
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var responsabile = await _ctx.Dipendenti.FirstOrDefaultAsync(d => d.UserId.ToString() == userId);
+
+            rend.Stato = RendicontazioneStato.Approvata;
+            rend.DataApprovazione = DateTime.Now;
+            rend.ApprovatoDaResponsabileId = responsabile?.Id;
+            rend.NoteResponsabile = request.Note;
+
+            await _ctx.SaveChangesAsync();
+
+            return Ok(new { message = "Rendicontazione approvata!" });
+        }
+
+        // API: Respingi rendicontazione
+        [HttpPost]
+        public virtual async Task<IActionResult> Respingi([FromBody] RespingiRequest request)
+        {
+            var rend = await _ctx.RendicontazioniMensili.FindAsync(request.RendicontazioneId);
+            if (rend == null) return NotFound();
+
+            if (string.IsNullOrWhiteSpace(request.Note))
+                return BadRequest(new { error = "Le note sono obbligatorie per respingere" });
+
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var responsabile = await _ctx.Dipendenti.FirstOrDefaultAsync(d => d.UserId.ToString() == userId);
+
+            rend.Stato = RendicontazioneStato.Respinta;
+            rend.DataApprovazione = DateTime.Now;
+            rend.ApprovatoDaResponsabileId = responsabile?.Id;
+            rend.NoteResponsabile = request.Note;
+
+            await _ctx.SaveChangesAsync();
+
+            return Ok(new { message = "Rendicontazione respinta" });
+        }
+        
     }
 
     public class RendicontazioneViewModel
     {
         public string NomeCompleto { get; set; }
         public string Email { get; set; }
+    }
+    public class ApprovaRequest
+    {
+        public int RendicontazioneId { get; set; }
+        public string Note { get; set; }
+    }   
+
+    public class RespingiRequest
+    {
+        public int RendicontazioneId { get; set; }
+        public string Note { get; set; }
     }
 }

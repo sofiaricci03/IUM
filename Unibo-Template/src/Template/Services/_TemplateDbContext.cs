@@ -10,14 +10,12 @@ namespace Template.Services
         public TemplateDbContext()
         {
         }
-
         public TemplateDbContext(DbContextOptions<TemplateDbContext> options)
             : base(options)
         {
             // Seed utenti demo
             DataGenerator.InitializeUsers(this);
         }
-
         // Tabelle esistenti
         public DbSet<User> Users { get; set; }
 
@@ -25,15 +23,14 @@ namespace Template.Services
         public DbSet<Dipendente> Dipendenti { get; set; }
         public DbSet<Progetto> Progetti { get; set; }
         public DbSet<AttivitaLavorativa> AttivitaLavorative { get; set; }
-
         public DbSet<RichiestaFerie> RichiestaFerie { get; set; }
-
         public DbSet<RendicontazioneMensile> RendicontazioniMensili { get; set; }
+        public DbSet<AssegnazioneDipendenteProgetto> AssegnazioniDipendentiProgetti { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
-            // NON usare ToTable() perché il DB è InMemory
+            // Non si usa ToTable() perché il DB è InMemory
 
             // Relazioni elementari opzionali
             modelBuilder.Entity<AttivitaLavorativa>()
@@ -47,6 +44,19 @@ namespace Template.Services
                 .WithMany()
                 .HasForeignKey(a => a.ProgettoId)
                 .OnDelete(DeleteBehavior.Cascade);
+            
+             modelBuilder.Entity<AssegnazioneDipendenteProgetto>()
+                .HasOne(a => a.Dipendente)
+                .WithMany()
+                .HasForeignKey(a => a.DipendenteId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<AssegnazioneDipendenteProgetto>()
+                .HasOne(a => a.Progetto)
+                .WithMany()
+                .HasForeignKey(a => a.ProgettoId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
+        
     }
 }
