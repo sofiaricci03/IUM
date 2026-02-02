@@ -1,0 +1,523 @@
+@model Template.Web.Areas.Responsabile.Controllers.CongedoViewModel
+@{
+    ViewData["Title"] = "Congedo – Responsabile";
+}
+
+@section pageTitle {
+    <div class="onit-page-title">
+        <h1><i class="fa-solid fa-plane-departure"></i> Congedo</h1>
+    </div>
+}
+
+<div class="container-fluid onit-page-content">
+    <div class="row">
+
+        <!-- SIDEBAR -->
+        <div class="col-2 onit-sidebar">
+            <ul class="onit-sidebar-menu">
+                <li>
+                    <a asp-area="Responsabile" asp-controller="Dashboard" asp-action="Index">
+                        <i class="fa-solid fa-calendar-check"></i> Attività
+                    </a>
+                </li>
+                <li>
+                    <a asp-area="Responsabile" asp-controller="Progetti" asp-action="Index">
+                        <i class="fa-solid fa-diagram-project"></i> Progetti
+                    </a>
+                </li>
+                <li>
+                    <a asp-area="Responsabile" asp-controller="Rendicontazione" asp-action="Index">
+                        <i class="fa-solid fa-clipboard-list"></i> Rendicontazione
+                    </a>
+                </li>
+                <li>
+                    <a class="active" asp-area="Responsabile" asp-controller="Congedo" asp-action="Index">
+                        <i class="fa-solid fa-plane-departure"></i> Congedo
+                    </a>
+                </li>
+                <li>
+                    <a asp-area="Responsabile" asp-controller="Contratto" asp-action="Index">
+                        <i class="fa-solid fa-file-contract"></i> Contratto
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- MAIN CONTENT -->
+        <div class="col-10">
+
+            <!-- TABS -->
+            <ul class="nav nav-tabs mb-4" id="congedoTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="approvazioni-tab" data-bs-toggle="tab"
+                            data-bs-target="#approvazioni" type="button" role="tab">
+                        <i class="fa-solid fa-clipboard-check"></i> Approvazioni
+                        <span class="badge bg-danger ms-2" id="badgeDaApprovare" style="display:none;">0</span>
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="calendario-tab" data-bs-toggle="tab"
+                            data-bs-target="#calendario" type="button" role="tab">
+                        <i class="fa-solid fa-calendar"></i> Calendario aziendale
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="mieferie-tab" data-bs-toggle="tab"
+                            data-bs-target="#mieferie" type="button" role="tab">
+                        <i class="fa-solid fa-user"></i> Le mie ferie
+                    </button>
+                </li>
+            </ul>
+
+            <div class="tab-content" id="congedoTabContent">
+
+                <!-- TAB 1: APPROVAZIONI -->
+                <div class="tab-pane fade show active" id="approvazioni" role="tabpanel">
+                    <div class="onit-toolbar d-flex justify-content-between align-items-center mb-3">
+                        <h3 class="fw-bold mb-0">Richieste da approvare</h3>
+                    </div>
+                    <div id="listaApprovazioni">
+                        <div class="text-center py-5">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Caricamento...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 2: CALENDARIO AZIENDALE -->
+                <div class="tab-pane fade" id="calendario" role="tabpanel">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h3 class="fw-bold mb-0">Calendario aziendale</h3>
+                        <div class="d-flex gap-3">
+                            <span class="badge-legenda badge-attesa">
+                                <i class="fa-solid fa-clock"></i> In attesa
+                            </span>
+                            <span class="badge-legenda badge-approvato">
+                                <i class="fa-solid fa-circle-check"></i> Approvato
+                            </span>
+                        </div>
+                    </div>
+                    <div class="onit-card p-3">
+                        <div id="calendarioAziendale" style="min-height:500px;"></div>
+                    </div>
+                </div>
+
+                <!-- TAB 3: LE MIE FERIE -->
+                <div class="tab-pane fade" id="mieferie" role="tabpanel">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h3 class="fw-bold mb-0">Le mie ferie</h3>
+                        <button class="btn btn-primary" id="btnNuovaRichiesta">
+                            <i class="fa-solid fa-plus"></i> Nuova richiesta
+                        </button>
+                    </div>
+                    <div class="onit-card p-3">
+                        <div id="calendarioMio" style="min-height:500px;"></div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODALE APPROVA/RESPINGI -->
+<div class="modal fade" id="modaleApprova" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content onit-card">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fa-solid fa-clipboard-check"></i> Dettaglio richiesta</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="requestId">
+                <div class="mb-3 d-flex align-items-center gap-3">
+                    <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center text-white"
+                         style="width:50px; height:50px; font-size:1.2rem;">
+                        <i class="fa-solid fa-user"></i>
+                    </div>
+                    <div>
+                        <h5 class="mb-0" id="modaleDipendente"></h5>
+                        <small class="text-muted" id="modaleTipo"></small>
+                    </div>
+                </div>
+                <hr>
+                <div class="row mb-3">
+                    <div class="col-6">
+                        <label class="fw-bold text-muted small">Dal</label>
+                        <p class="mb-0" id="modaleDal">-</p>
+                    </div>
+                    <div class="col-6">
+                        <label class="fw-bold text-muted small">Al</label>
+                        <p class="mb-0" id="modaleAl">-</p>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-6">
+                        <label class="fw-bold text-muted small">Giorni</label>
+                        <p class="mb-0" id="modaleGiorni">-</p>
+                    </div>
+                    <div class="col-6">
+                        <label class="fw-bold text-muted small">Data richiesta</label>
+                        <p class="mb-0" id="modaleDataRichiesta">-</p>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="fw-bold text-muted small">Motivo</label>
+                    <p class="mb-0" id="modaleMotivo">-</p>
+                </div>
+                <div id="noteContainer" class="d-none mt-3">
+                    <label class="fw-bold text-muted small">Note respingimento (obbligatorio)</label>
+                    <textarea id="noteRespingimento" class="form-control" rows="2" placeholder="Motivo del respingimento..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
+                <button type="button" class="btn btn-danger" id="btnRespingi">
+                    <i class="fa-solid fa-xmark"></i> Respingi
+                </button>
+                <button type="button" class="btn btn-success" id="btnApprova">
+                    <i class="fa-solid fa-check"></i> Approva
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODALE NUOVA RICHIESTA -->
+<div class="modal fade" id="modaleCrea" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content onit-card">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fa-solid fa-plane-departure"></i> Nuova richiesta congedo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Tipo</label>
+                    <div class="btn-group w-100" id="tipoGroup">
+                        <button class="btn btn-outline-primary active" id="btnTipoFerie">
+                            <i class="fa-solid fa-umbrella-beach"></i> Ferie
+                        </button>
+                        <button class="btn btn-outline-primary" id="btnTipoPermesso">
+                            <i class="fa-solid fa-clock"></i> Permesso
+                        </button>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Dal</label>
+                    <input type="date" id="creaDal" class="form-control">
+                </div>
+                <div class="mb-3" id="alContainer">
+                    <label class="form-label fw-bold">Al</label>
+                    <input type="date" id="creaAl" class="form-control">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Motivo</label>
+                    <textarea id="creaMotivo" class="form-control" rows="2" placeholder="Motivo della richiesta..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
+                <button type="button" class="btn btn-primary" id="btnInviaRichiesta">
+                    <i class="fa-solid fa-send"></i> Invia richiesta
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section styles {
+<style>
+    .badge-legenda {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+    .badge-attesa { background-color: #fff3cd; color: #856404; }
+    .badge-approvato { background-color: #d4edda; color: #155724; }
+
+    .rend-card { transition: all 0.2s; cursor: pointer; }
+    .rend-card:hover { transform: translateX(5px); box-shadow: 0 4px 8px rgba(0,0,0,0.15); }
+
+    .fc .fc-event { border-radius: 4px; font-size: 0.8rem; padding: 2px 6px; cursor: pointer; }
+    .fc-event-attesa { background-color: rgba(255,193,7,0.5) !important; border-color: #ffc107 !important; color: #856404 !important; }
+    .fc-event-approvato { background-color: #28a745 !important; border-color: #28a745 !important; color: #fff !important; }
+</style>
+}
+
+@section scripts {
+<script>
+(function() {
+    var tipoCorrente = 'Ferie';
+    var calendarAziendale = null;
+    var calendarMio = null;
+
+    // ========================================
+    // INIZIALIZZAZIONE
+    // ========================================
+    document.addEventListener('DOMContentLoaded', function() {
+        caricaApprovazioni();
+
+        document.getElementById('calendario-tab').addEventListener('shown.bs.tab', function() {
+            setTimeout(function() {
+                if (!calendarAziendale) {
+                    inizializzaCalendarioAziendale();
+                } else {
+                    calendarAziendale.render();
+                }
+            }, 200);
+        });
+
+        document.getElementById('mieferie-tab').addEventListener('shown.bs.tab', function() {
+            setTimeout(function() {
+                if (!calendarMio) {
+                    inizializzaCalendarioMio();
+                } else {
+                    calendarMio.render();
+                }
+            }, 200);
+        });
+
+        document.getElementById('btnNuovaRichiesta').addEventListener('click', function() {
+            apriModaleCrea();
+        });
+
+        document.getElementById('btnApprova').addEventListener('click', function() {
+            approvaRichiesta();
+        });
+
+        document.getElementById('btnRespingi').addEventListener('click', function() {
+            respingiRichiesta();
+        });
+
+        document.getElementById('btnTipoFerie').addEventListener('click', function() {
+            tipoCorrente = 'Ferie';
+            document.getElementById('btnTipoFerie').classList.add('active');
+            document.getElementById('btnTipoPermesso').classList.remove('active');
+            document.getElementById('alContainer').style.display = 'block';
+        });
+
+        document.getElementById('btnTipoPermesso').addEventListener('click', function() {
+            tipoCorrente = 'Permesso';
+            document.getElementById('btnTipoPermesso').classList.add('active');
+            document.getElementById('btnTipoFerie').classList.remove('active');
+            document.getElementById('alContainer').style.display = 'none';
+        });
+
+        document.getElementById('btnInviaRichiesta').addEventListener('click', function() {
+            creaRichiesta();
+        });
+    });
+
+    // ========================================
+    // TAB APPROVAZIONI
+    // ========================================
+    function caricaApprovazioni() {
+        fetch('/Responsabile/CongedoApi/GetRichiesteDaApprovare')
+            .then(function(response) { return response.json(); })
+            .then(function(richieste) {
+                var container = document.getElementById('listaApprovazioni');
+
+                if (richieste.length === 0) {
+                    container.innerHTML =
+                        '<div class="onit-card p-5 text-center">' +
+                        '<i class="fa-solid fa-clipboard-check fa-3x text-muted mb-3"></i>' +
+                        '<h4>Nessuna richiesta da approvare</h4>' +
+                        '<p class="text-muted">Tutte le richieste sono state processate</p>' +
+                        '</div>';
+                    document.getElementById('badgeDaApprovare').style.display = 'none';
+                } else {
+                    container.innerHTML = '';
+                    richieste.forEach(function(r) {
+                        var tipoIcon = r.tipo === 'Ferie' ? 'fa-umbrella-beach' : 'fa-clock';
+                        var card = document.createElement('div');
+                        card.className = 'onit-card p-3 mb-2 rend-card';
+                        card.addEventListener('click', function() { apriModaleApprova(r); });
+                        card.innerHTML =
+                            '<div class="d-flex justify-content-between align-items-center">' +
+                            '<div class="d-flex align-items-center gap-3">' +
+                            '<div class="rounded-circle bg-light d-flex align-items-center justify-content-center" style="width:45px;height:45px;">' +
+                            '<i class="fa-solid ' + tipoIcon + ' text-primary fa-lg"></i></div>' +
+                            '<div><h5 class="mb-0">' + r.dipendente + '</h5>' +
+                            '<small class="text-muted"><i class="fa-solid ' + tipoIcon + '"></i> ' + r.tipo + ' · ' +
+                            r.dataInizio + ' – ' + r.dataFine + ' · ' + r.giorni + ' giorn' + (r.giorni > 1 ? 'i' : 'o') + '</small></div></div>' +
+                            '<div class="text-end"><span class="badge bg-warning text-dark">In attesa</span>' +
+                            '<p class="text-muted small mb-0 mt-1">Richiesto il ' + r.dataRichiesta + '</p></div></div>';
+                        container.appendChild(card);
+                    });
+                    document.getElementById('badgeDaApprovare').textContent = richieste.length;
+                    document.getElementById('badgeDaApprovare').style.display = 'inline-block';
+                }
+            })
+            .catch(function(err) { console.error('Errore caricamento approvazioni:', err); });
+    }
+
+    function apriModaleApprova(r) {
+        document.getElementById('requestId').value = r.id;
+        document.getElementById('modaleDipendente').textContent = r.dipendente;
+        document.getElementById('modaleTipo').textContent = r.tipo;
+        document.getElementById('modaleDal').textContent = r.dataInizio;
+        document.getElementById('modaleAl').textContent = r.dataFine;
+        document.getElementById('modaleGiorni').textContent = r.giorni + ' giorn' + (r.giorni > 1 ? 'i' : 'o');
+        document.getElementById('modaleDataRichiesta').textContent = r.dataRichiesta;
+        document.getElementById('modaleMotivo').textContent = r.motivo || 'Nessun motivo specificato';
+        document.getElementById('noteRespingimento').value = '';
+        document.getElementById('noteContainer').classList.add('d-none');
+        new bootstrap.Modal(document.getElementById('modaleApprova')).show();
+    }
+
+    function approvaRichiesta() {
+        var id = parseInt(document.getElementById('requestId').value);
+        fetch('/Responsabile/CongedoApi/Approva', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(id)
+        })
+        .then(function(response) { return response.json(); })
+        .then(function(data) {
+            alert(data.message || 'Approvata!');
+            bootstrap.Modal.getInstance(document.getElementById('modaleApprova')).hide();
+            caricaApprovazioni();
+            if (calendarAziendale) calendarAziendale.refetchEvents();
+        })
+        .catch(function() { alert('Errore di connessione'); });
+    }
+
+    function respingiRichiesta() {
+        var note = document.getElementById('noteRespingimento').value.trim();
+        if (!note) {
+            document.getElementById('noteContainer').classList.remove('d-none');
+            document.getElementById('noteRespingimento').focus();
+            alert('Inserisci il motivo del respingimento');
+            return;
+        }
+        var id = parseInt(document.getElementById('requestId').value);
+        fetch('/Responsabile/CongedoApi/Respingi', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: id, note: note })
+        })
+        .then(function(response) { return response.json(); })
+        .then(function(data) {
+            alert(data.message || 'Respinta!');
+            bootstrap.Modal.getInstance(document.getElementById('modaleApprova')).hide();
+            caricaApprovazioni();
+            if (calendarAziendale) calendarAziendale.refetchEvents();
+        })
+        .catch(function() { alert('Errore di connessione'); });
+    }
+
+    // ========================================
+    // CALENDARIO AZIENDALE
+    // ========================================
+    function inizializzaCalendarioAziendale() {
+        var el = document.getElementById('calendarioAziendale');
+        calendarAziendale = new FullCalendar.Calendar(el, {
+            initialView: 'month',
+            locale: 'it',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'month,week'
+            },
+            events: function(info, successCallback, failureCallback) {
+                fetch('/Responsabile/CongedoApi/GetFerieTutti')
+                    .then(function(res) { return res.json(); })
+                    .then(function(data) { successCallback(data); })
+                    .catch(function(err) { failureCallback(err); });
+            },
+            eventDidMount: function(info) {
+                var stato = info.event.extendedProps.stato;
+                if (stato === 'InAttesa') info.el.classList.add('fc-event-attesa');
+                else if (stato === 'Approvato') info.el.classList.add('fc-event-approvato');
+            },
+            eventClick: function(info) {
+                var p = info.event.extendedProps;
+                alert('Dipendente: ' + p.dipendente + '\nTipo: ' + p.tipo + '\nStato: ' + p.stato + '\nMotivo: ' + (p.motivo || 'N/A'));
+            }
+        });
+        calendarAziendale.render();
+    }
+
+    // ========================================
+    // CALENDARIO MIO
+    // ========================================
+    function inizializzaCalendarioMio() {
+        var el = document.getElementById('calendarioMio');
+        calendarMio = new FullCalendar.Calendar(el, {
+            initialView: 'month',
+            locale: 'it',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'month,week'
+            },
+            events: function(info, successCallback, failureCallback) {
+                fetch('/Responsabile/CongedoApi/GetMieFerie')
+                    .then(function(res) { return res.json(); })
+                    .then(function(data) { successCallback(data); })
+                    .catch(function(err) { failureCallback(err); });
+            },
+            eventDidMount: function(info) {
+                var stato = info.event.extendedProps.stato;
+                if (stato === 'InAttesa') info.el.classList.add('fc-event-attesa');
+                else if (stato === 'Approvato') info.el.classList.add('fc-event-approvato');
+            },
+            eventClick: function(info) {
+                var p = info.event.extendedProps;
+                alert('Tipo: ' + p.tipo + '\nStato: ' + p.stato + '\nMotivo: ' + (p.motivo || 'N/A'));
+            },
+            dateClick: function(info) {
+                document.getElementById('creaDal').value = info.dateStr;
+                document.getElementById('creaAl').value = info.dateStr;
+                new bootstrap.Modal(document.getElementById('modaleCrea')).show();
+            }
+        });
+        calendarMio.render();
+    }
+
+    // ========================================
+    // MODALE CREA RICHIESTA
+    // ========================================
+    function apriModaleCrea() {
+        document.getElementById('creaDal').value = '';
+        document.getElementById('creaAl').value = '';
+        document.getElementById('creaMotivo').value = '';
+        tipoCorrente = 'Ferie';
+        document.getElementById('btnTipoFerie').classList.add('active');
+        document.getElementById('btnTipoPermesso').classList.remove('active');
+        document.getElementById('alContainer').style.display = 'block';
+        new bootstrap.Modal(document.getElementById('modaleCrea')).show();
+    }
+
+    function creaRichiesta() {
+        var dal = document.getElementById('creaDal').value;
+        var al = tipoCorrente === 'Permesso' ? dal : document.getElementById('creaAl').value;
+        var motivo = document.getElementById('creaMotivo').value.trim();
+
+        if (!dal) { alert('Seleziona la data'); return; }
+        if (tipoCorrente === 'Ferie' && !al) { alert('Seleziona la data di fine'); return; }
+
+        fetch('/Responsabile/CongedoApi/Richiedi', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: null, tipo: tipoCorrente, dal: dal, al: al, motivo: motivo })
+        })
+        .then(function(response) { return response.json(); })
+        .then(function(data) {
+            alert(data.message || 'Richiesta inviata!');
+            bootstrap.Modal.getInstance(document.getElementById('modaleCrea')).hide();
+            if (calendarMio) calendarMio.refetchEvents();
+            if (calendarAziendale) calendarAziendale.refetchEvents();
+        })
+        .catch(function() { alert('Errore di connessione'); });
+    }
+
+})();
+</script>
+}

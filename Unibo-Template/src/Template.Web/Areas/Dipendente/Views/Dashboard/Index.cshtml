@@ -230,7 +230,7 @@
         // Carica progetti assegnati nel dropdown
         async function caricaProgettiAssegnati() {
             try {
-                const response = await fetch('/Dipendente/CalendarioApi/GetProgettiAssegnati');
+                const response = await fetch('/Dipendente/CalendarioApi/GetProgetti');
                 const progetti = await response.json();
                 
                 const selectProgetto = document.getElementById('progetto');
@@ -243,9 +243,8 @@
                 progetti.forEach(p => {
                     const option = document.createElement('option');
                     option.value = p.id;
-                    option.textContent = p.label;
+                    option.textContent = p.nome;
                     option.setAttribute('data-cliente', p.cliente);
-                    option.setAttribute('data-nome', p.nome);
                     selectProgetto.appendChild(option);
                 });
                 
@@ -281,5 +280,10 @@
         });
     </script>
 
+     <script>
+        window.CURRENT_AREA = 'Dipendente'; 
+    </script>
+    
     <script src="~/js/dashboard-calendar.js"></script>
+
 }

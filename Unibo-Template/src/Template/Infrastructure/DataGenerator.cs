@@ -11,10 +11,19 @@ namespace Template.Infrastructure
 {
     public class DataGenerator
     {
+        private static readonly object _lock = new object();
+        private static bool _initialized = false;
+
         public static void InitializeUsers(TemplateDbContext context)
         {
-            if (context.Users.Any())
-                return;   // Data already seeded
+            // Thread-safe check
+            lock (_lock)
+            {
+                if (_initialized || context.Users.Any())
+                    return;
+
+                _initialized = true;
+            }
 
             string Hash(string password)
             {
@@ -76,7 +85,7 @@ namespace Template.Infrastructure
             context.SaveChanges();
 
             // ==============================
-            // CREA DIPENDENTI (collegati agli User)
+            // CREA DIPENDENTI 
             // ==============================
 
             var dip1 = context.Users.First(u => u.Email == "dipendente1@azienda.it");
@@ -188,7 +197,7 @@ namespace Template.Infrastructure
 
             var assegnazioni = new List<AssegnazioneDipendenteProgetto>
             {
-                // Luca Rossi (dipendente1) → Sviluppo ERP e Portale E-commerce
+                
                 new AssegnazioneDipendenteProgetto
                 {
                     Id = 1,
@@ -206,7 +215,7 @@ namespace Template.Infrastructure
                     Attivo = true
                 },
                 
-                // Marco Verdi (dipendente2) → Portale E-commerce e App Mobile
+                
                 new AssegnazioneDipendenteProgetto
                 {
                     Id = 3,
@@ -224,7 +233,6 @@ namespace Template.Infrastructure
                     Attivo = true
                 },
                 
-                // Giulia Bianchi (dipendente3) → App Mobile e Sito Web
                 new AssegnazioneDipendenteProgetto
                 {
                     Id = 5,
@@ -242,7 +250,6 @@ namespace Template.Infrastructure
                     Attivo = true
                 },
                 
-                // Alessandro Ferrari (responsabile) → Tutti i progetti (ha visibilità completa)
                 new AssegnazioneDipendenteProgetto
                 {
                     Id = 7,

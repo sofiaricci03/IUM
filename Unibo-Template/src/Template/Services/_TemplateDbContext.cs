@@ -10,10 +10,9 @@ namespace Template.Services
         public TemplateDbContext()
         {
         }
-        public TemplateDbContext(DbContextOptions<TemplateDbContext> options)
+    public TemplateDbContext(DbContextOptions<TemplateDbContext> options)
             : base(options)
         {
-            // Seed utenti demo
             DataGenerator.InitializeUsers(this);
         }
         // Tabelle esistenti

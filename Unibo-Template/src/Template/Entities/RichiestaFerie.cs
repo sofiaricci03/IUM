@@ -13,6 +13,8 @@ namespace Template.Entities
         public string Tipo { get; set; }  // ferie / permesso
         public FerieStato Stato { get; set; }
         public DateTime DataRichiesta { get; set; }
+        public DateTime? DataRisposta { get; set; }
+        public string NoteResponsabile { get; set; }
     }
 
     public enum FerieStato

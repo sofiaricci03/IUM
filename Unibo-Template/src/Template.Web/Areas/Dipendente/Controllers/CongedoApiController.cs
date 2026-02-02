@@ -66,17 +66,37 @@ namespace Template.Web.Areas.Dipendente.Controllers
         public virtual IActionResult Richiedi([FromBody] RichiestaFerieDTO dto)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            
+            // DEBUG
+            if (string.IsNullOrEmpty(userId))
+                return BadRequest(new { error = "NameIdentifier claim non trovato. Fai logout/login." });
+            
             var dip = _ctx.Dipendenti.FirstOrDefault(d => d.UserId.ToString() == userId);
-            if (dip == null) return Unauthorized();
+            
+            // DEBUG
+            if (dip == null)
+                return BadRequest(new { error = $"Dipendente non trovato per UserId: {userId}" });
+
+            // DEBUG
+            if (string.IsNullOrEmpty(dto.dal))
+                return BadRequest(new { error = "Campo 'dal' vuoto" });
 
             if (!DateTime.TryParse(dto.dal, out var inizio))
-                return BadRequest("Data inizio non valida");
+                return BadRequest(new { error = $"Data inizio non valida. Ricevuto: {dto.dal}" });
 
             DateTime fine;
             if (dto.tipo == "Permesso")
+            {
                 fine = inizio;
-            else if (!DateTime.TryParse(dto.al, out fine))
-                return BadRequest("Data fine non valida");
+            }
+            else
+            {
+                if (string.IsNullOrEmpty(dto.al))
+                    return BadRequest(new { error = "Campo 'al' vuoto per tipo Ferie" });
+                    
+                if (!DateTime.TryParse(dto.al, out fine))
+                    return BadRequest(new { error = $"Data fine non valida. Ricevuto: {dto.al}" });
+            }
 
             var richiesta = new RichiestaFerie
             {
@@ -92,7 +112,7 @@ namespace Template.Web.Areas.Dipendente.Controllers
             _ctx.RichiestaFerie.Add(richiesta);
             _ctx.SaveChanges();
 
-            return Ok();
+            return Ok(new { message = "Richiesta inviata con successo!" });
         }
 
         // =========================

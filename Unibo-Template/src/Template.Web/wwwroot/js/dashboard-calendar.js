@@ -5,7 +5,8 @@
 let calendar;
 
 // Detect current area (Dipendente or Responsabile)
-const currentArea = window.location.pathname.includes('/Responsabile/') ? 'Responsabile' : 'Dipendente';
+const currentArea = window.CURRENT_AREA || (window.location.pathname.includes('/Responsabile/') ? 'Responsabile' : 'Dipendente');
+console.log(' Area detected:', currentArea); // Debug
 
 // ----------------------
 //  FUNZIONE: Arrotonda a 15 minuti
@@ -96,12 +97,58 @@ function apriPopupPerData(dateStr) {
 }
 
 // ----------------------
+//  APRI POPUP PER RANGE DATE
+// ----------------------
+function apriPopupPerRange(startStr, endStr) {
+    // Calcola giorni nel range (esclude ultimo giorno perché FullCalendar usa exclusive end)
+    const start = new Date(startStr);
+    const end = new Date(endStr);
+    end.setDate(end.getDate() - 1); // Exclusive end → inclusive
+    
+    const giorni = Math.round((end - start) / (1000 * 60 * 60 * 24)) + 1;
+    
+    document.getElementById("oraInizio").value = "09:00";
+    document.getElementById("oraFine").value = "18:00";
+    document.getElementById("progetto").value = "";
+    document.getElementById("cliente").value = "";
+    document.getElementById("attivita").value = "";
+    document.getElementById("descrizione").value = "";
+
+    document.getElementById("checkTrasferta").checked = false;
+    document.getElementById("boxTrasferta").style.display = "none";
+    document.getElementById("spesaTrasporto").value = "";
+    document.getElementById("spesaVitto").value = "";
+    document.getElementById("spesaAlloggio").value = "";
+
+    document.getElementById("btnSalva").removeAttribute("data-id");
+    document.getElementById("btnSalva").setAttribute("data-date-start", startStr);
+    document.getElementById("btnSalva").setAttribute("data-date-end", end.toISOString().split('T')[0]);
+    
+    const lbl = document.getElementById("dataSelezionata");
+    if (lbl) {
+        if (giorni === 1) {
+            lbl.textContent = start.toLocaleDateString("it-IT");
+        } else {
+            lbl.textContent = `${start.toLocaleDateString("it-IT")} → ${end.toLocaleDateString("it-IT")} (${giorni} giorni)`;
+        }
+    }
+
+    document.getElementById("btnElimina").style.display = "none";
+
+    new bootstrap.Modal(document.getElementById("modaleOre")).show();
+}
+// ----------------------
+//  SALVA ATTIVITÀ (CREATE/UPDATE)
+// ----------------------
+// ----------------------
 //  SALVA ATTIVITÀ (CREATE/UPDATE)
 // ----------------------
 document.getElementById("btnSalva").addEventListener("click", async function () {
 
     const id = this.getAttribute("data-id");
-    const giorno = this.getAttribute("data-date");
+    const giornoSingolo = this.getAttribute("data-date");
+    const dateStart = this.getAttribute("data-date-start");
+    const dateEnd = this.getAttribute("data-date-end");
     
     // Ottieni progettoId dal select
     const progettoSelect = document.getElementById("progetto");
@@ -110,7 +157,7 @@ document.getElementById("btnSalva").addEventListener("click", async function () 
 
     let dto = {
         id: id ? parseInt(id) : 0,
-        giorno: giorno,
+        giorno: giornoSingolo || dateStart,
         oraInizio: document.getElementById("oraInizio").value,
         oraFine: document.getElementById("oraFine").value,
         progettoId: progettoId ? parseInt(progettoId) : 0,
@@ -136,6 +183,59 @@ document.getElementById("btnSalva").addEventListener("click", async function () 
         return;
     }
 
+    // Se è un range di date, salva per ogni giorno
+    if (!id && dateStart && dateEnd) {
+        const start = new Date(dateStart);
+        const end = new Date(dateEnd);
+        const giorni = [];
+        
+        // Genera array di date
+        for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+            giorni.push(new Date(d).toISOString().split('T')[0]);
+        }
+        
+        // Salva su ogni giorno
+        let successCount = 0;
+        let errorMessages = [];
+        
+        for (const giorno of giorni) {
+            dto.giorno = giorno;
+            
+            try {
+                const res = await fetch(`/${currentArea}/CalendarioApi/AddAttivita`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(dto)
+                });
+                
+                const data = await res.json();
+                
+                if (res.ok) {
+                    successCount++;
+                } else {
+                    errorMessages.push(`${giorno}: ${data.error}`);
+                }
+            } catch (error) {
+                errorMessages.push(`${giorno}: Errore di connessione`);
+            }
+        }
+        
+        const modal = bootstrap.Modal.getInstance(document.getElementById("modaleOre"));
+        modal.hide();
+        
+        calendar.removeAllEvents();
+        caricaEventi();
+        
+        if (errorMessages.length > 0) {
+            alert(`Salvate ${successCount}/${giorni.length} attività.\n\nErrori:\n${errorMessages.join('\n')}`);
+        } else {
+            alert(`${successCount} attività salvate con successo!`);
+        }
+        
+        return;
+    }
+
+    // Salvataggio singolo (create o update)
     const url = id
         ? `/${currentArea}/CalendarioApi/UpdateAttivita`
         : `/${currentArea}/CalendarioApi/AddAttivita`;
@@ -153,7 +253,6 @@ document.getElementById("btnSalva").addEventListener("click", async function () 
             const modal = bootstrap.Modal.getInstance(document.getElementById("modaleOre"));
             modal.hide();
 
-            // Ricarica calendario
             calendar.removeAllEvents();
             caricaEventi();
             
@@ -234,6 +333,8 @@ document.addEventListener("DOMContentLoaded", function () {
         initialView: "dayGridMonth",
         locale: "it",
         selectable: true,
+        selectMirror: true,  // Mostra preview durante selezione
+        selectOverlap: false, // Non sovrapporre eventi esistenti
         height: 650,
         headerToolbar: false,
         
@@ -243,7 +344,13 @@ document.addEventListener("DOMContentLoaded", function () {
             hour12: false
         },
 
-        dateClick: info => apriPopupPerData(info.dateStr),
+    select: function(info) {
+    // Selezione range di date
+    apriPopupPerRange(info.startStr, info.endStr);
+    calendar.unselect(); // Deseleziona dopo apertura modale
+    },
+
+    dateClick: info => apriPopupPerData(info.dateStr),
 
         eventClick: function (info) {
 

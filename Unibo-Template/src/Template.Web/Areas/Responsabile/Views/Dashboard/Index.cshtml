@@ -240,10 +240,12 @@
                 </div>
 
                 <label class="onit-label-required">Progetto</label>
-                <input id="progetto" class="form-control mb-3" />
+                <select id="progetto" class="form-select mb-3">
+                    <option value="">Seleziona progetto...</option>
+                </select>
 
                 <label class="onit-label-required">Cliente</label>
-                <input id="cliente" class="form-control mb-3" />
+                <input id="cliente" class="form-control mb-3" readonly />
 
                 <label class="onit-label-required">Attività</label>
                 <input id="attivita" class="form-control mb-3" />
@@ -338,6 +340,46 @@
         });
 
     </script>
+    <script>
+        // Carica progetti all'apertura del modale
+        document.addEventListener('DOMContentLoaded', function() {
+            caricaProgetti();
+            
+            // Auto-compila cliente quando selezioni progetto
+            document.getElementById('progetto').addEventListener('change', function() {
+                const selectProgetto = this;
+                const selectedOption = selectProgetto.options[selectProgetto.selectedIndex];
+                const cliente = selectedOption.getAttribute('data-cliente') || '';
+                document.getElementById('cliente').value = cliente;
+            });
+        });
 
+        async function caricaProgetti() {
+            try {
+                const response = await fetch('/Responsabile/CalendarioApi/GetProgetti');
+                const progetti = await response.json();
+                
+                const selectProgetto = document.getElementById('progetto');
+                
+                // Mantieni opzione vuota
+                selectProgetto.innerHTML = '<option value="">Seleziona progetto...</option>';
+                
+                // Aggiungi progetti
+                progetti.forEach(p => {
+                    const option = document.createElement('option');
+                    option.value = p.id;
+                    option.textContent = p.nome;
+                    option.setAttribute('data-cliente', p.cliente);
+                    selectProgetto.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Errore caricamento progetti:', error);
+                alert('Errore nel caricamento dei progetti');
+            }
+        }
+    </script>
+     <script>
+        window.CURRENT_AREA = 'Responsabile'; 
+    </script>
     <script src="~/js/dashboard-calendar.js"></script>
 }

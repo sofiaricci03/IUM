@@ -58,6 +58,34 @@ namespace Template.Web.Areas.Dipendente.Controllers
             return Ok(lista);
         }
 
+        [HttpGet]
+        public virtual IActionResult GetProgetti()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var dip = _ctx.Dipendenti.FirstOrDefault(d => d.UserId.ToString() == userId);
+            
+            if (dip == null)
+                return BadRequest(new { error = "Dipendente non trovato" });
+
+            // Solo progetti assegnati e attivi
+            var progettiAssegnati = _ctx.AssegnazioniDipendentiProgetti
+                .Where(a => a.DipendenteId == dip.Id && a.Attivo)
+                .Select(a => a.ProgettoId)
+                .ToList();
+
+            var progetti = _ctx.Progetti
+                .Where(p => progettiAssegnati.Contains(p.Id) && !p.Completato)
+                .Select(p => new
+                {
+                    id = p.Id,
+                    nome = p.Nome,
+                    cliente = p.Cliente
+                })
+                .ToList();
+
+            return Ok(progetti);
+        }
+
         // ==========================
         // POST aggiungi nuova attività CON VALIDAZIONI
         // ==========================
