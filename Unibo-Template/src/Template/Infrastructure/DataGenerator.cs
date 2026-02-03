@@ -286,6 +286,43 @@ namespace Template.Infrastructure
 
             context.AssegnazioniDipendentiProgetti.AddRange(assegnazioni);
             context.SaveChanges();
+
+            // ==============================
+    // FATTURE DI ESEMPIO
+    // ==============================
+        if (!context.Fatture.Any())
+        {
+            var progettoERP = context.Progetti.First(p => p.Id == 1);
+            var responsabileDipendente = context.Dipendenti.First(d => d.Id == 4);
+
+            var fatture = new List<Fattura>
+            {
+                new Fattura
+                {
+                    Id = 1,
+                    ProgettoId = progettoERP.Id,
+                    NumeroFattura = "2026/001",
+                    DataEmissione = DateTime.Now.AddDays(-15),
+                    PeriodoDa = new DateTime(2026, 1, 1),
+                    PeriodoA = new DateTime(2026, 1, 31),
+                    CostoOrario = 75.00m,
+                    OreTotali = 80.00m,
+                    ImportoTotale = 6000.00m,
+                    PercentualeIva = 22.00m,
+                    ImportoIva = 1320.00m,
+                    ImportoTotaleConIva = 7320.00m,
+                    Stato = "Inviata",
+                    DataInvio = DateTime.Now.AddDays(-15),
+                    ResponsabileId = responsabileDipendente.Id
+                }
+            };
+            
+            context.Fatture.AddRange(fatture);
+            context.SaveChanges();
         }
+        }
+
+    
+
     }
 }

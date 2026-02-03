@@ -8,7 +8,7 @@ namespace Template.Web.Areas
 
         public string EmailUtenteCorrente { get; set; }
         
-        public string NomeCompletoUtenteCorrente { get; set; }  // ← AGGIUNTO
+        public string NomeCompletoUtenteCorrente { get; set; } 
 
         public string GravatarUrl
         {

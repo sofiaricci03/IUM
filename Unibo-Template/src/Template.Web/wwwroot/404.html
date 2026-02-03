@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 - Attività Non Trovata | IUM2</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 20px;
+            position: relative;
+        }
+
+        /* Particelle animate di sfondo */
+        .particle {
+            position: fixed;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            animation: float 20s infinite;
+            pointer-events: none;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0) translateX(0) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100vh) translateX(100px) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        .container {
+            text-align: center;
+            color: white;
+            z-index: 10;
+            max-width: 800px;
+            width: 100%;
+            padding: 40px 20px;
+        }
+
+        .error-code {
+            font-size: 180px;
+            font-weight: 900;
+            line-height: 1;
+            text-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            animation: glitch 3s infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes glitch {
+            0%, 100% {
+                text-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            }
+            25% {
+                text-shadow: -5px 0 10px rgba(255,0,0,0.5), 5px 0 10px rgba(0,255,255,0.5);
+            }
+            50% {
+                text-shadow: 5px 0 10px rgba(255,0,0,0.5), -5px 0 10px rgba(0,255,255,0.5);
+            }
+            75% {
+                text-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            }
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 10px 25px;
+            background: rgba(255, 87, 51, 0.3);
+            border: 2px solid rgba(255, 87, 51, 0.8);
+            border-radius: 50px;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 30px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.05);
+                opacity: 0.9;
+            }
+        }
+
+        h1 {
+            font-size: 42px;
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+
+        .emoji {
+            font-size: 80px;
+            animation: bounce 2s infinite;
+            display: inline-block;
+            margin: 20px 0;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {
+                transform: translateY(0);
+            }
+            40% {
+                transform: translateY(-30px);
+            }
+            60% {
+                transform: translateY(-15px);
+            }
+        }
+
+        .message-box {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            margin: 30px 0;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .message-box p {
+            font-size: 18px;
+            line-height: 1.8;
+            margin-bottom: 10px;
+        }
+
+        .suggestion-box {
+            background: rgba(255, 255, 255, 0.95);
+            color: #333;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 30px 0;
+            text-align: left;
+        }
+
+        .suggestion-box h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+
+        .suggestion-box ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .suggestion-box li {
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+            font-size: 16px;
+        }
+
+        .suggestion-box li:last-child {
+            border-bottom: none;
+        }
+
+        .suggestion-box li::before {
+            content: "→ ";
+            color: #667eea;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .buttons {
+            margin-top: 40px;
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 15px 40px;
+            font-size: 18px;
+            font-weight: 600;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: white;
+            color: #667eea;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid white;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-3px);
+        }
+
+        .fun-fact {
+            margin-top: 40px;
+            margin-bottom: 40px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            font-size: 14px;
+            font-style: italic;
+        }
+
+        .timer {
+            display: inline-block;
+            font-weight: bold;
+            color: #FFD700;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            body {
+                padding: 30px 15px;
+            }
+
+            .error-code {
+                font-size: 100px;
+            }
+
+            h1 {
+                font-size: 28px;
+            }
+
+            .message-box p {
+                font-size: 16px;
+            }
+
+            .buttons {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+
+            .emoji {
+                font-size: 60px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Particelle animate -->
+    <script>
+        // Genera particelle casuali
+        for(let i = 0; i < 20; i++) {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            particle.style.width = Math.random() * 100 + 20 + 'px';
+            particle.style.height = particle.style.width;
+            particle.style.left = Math.random() * 100 + '%';
+            particle.style.top = Math.random() * 100 + '%';
+            particle.style.animationDelay = Math.random() * 20 + 's';
+            particle.style.animationDuration = (Math.random() * 10 + 15) + 's';
+            document.body.appendChild(particle);
+        }
+    </script>
+
+    <div class="container">
+        <div class="error-code">404</div>
+        
+        <div class="status-badge">🔴 ATTIVITÀ NON TROVATA</div>
+
+        <h1>Questa pagina è in ferie! 🏖️</h1>
+
+        <div class="emoji">🌴</div>
+
+        <div class="suggestion-box">
+            <h3>💡 Cosa puoi fare:</h3>
+            <ul>
+                <li>Torna alla dashboard principale</li>
+                <li>Controlla che l'URL sia corretto</li>
+                <li>Contatta il team di sviluppo (anche loro in ferie)</li>
+                <li>Prendi anche tu una pausa ☕</li>
+            </ul>
+        </div>
+
+        <div class="buttons">
+            <a href="/" class="btn btn-primary">🏠 Torna alla Dashboard</a>
+            <a href="javascript:history.back()" class="btn btn-secondary">⬅️ Torna Indietro</a>
+        </div>
+
+        <div class="fun-fact">
+            💡 <strong>Fun Fact:</strong> Stai perdendo tempo prezioso su questa pagina da <span class="timer" id="timer">0</span> secondi. 
+            Questo tempo potrebbe essere rendicontato come "Ricerca e Sviluppo - Bug Investigation" 😄
+        </div>
+    </div>
+
+    <script>
+        // Timer divertente
+        let seconds = 0;
+        const timerElement = document.getElementById('timer');
+        
+        setInterval(() => {
+            seconds++;
+            timerElement.textContent = seconds;
+            
+            // Easter eggs a tempo
+            if (seconds === 10) {
+                timerElement.style.color = '#FF6B6B';
+            }
+            if (seconds === 30) {
+                alert('🚨 Attenzione: 30 secondi sprecati! Il responsabile potrebbe non approvare questa attività! 😅');
+            }
+            if (seconds === 60) {
+                const funFact = document.querySelector('.fun-fact');
+                funFact.innerHTML = '⚠️ <strong>Alert:</strong> Hai superato 1 minuto su questa pagina! Questa attività rischia di essere contrassegnata come "Tempo Perso - Non Fatturabile" 😂';
+                funFact.style.background = 'rgba(255, 107, 107, 0.3)';
+            }
+        }, 1000);
+
+        // Easter egg: click multipli sull'emoji
+        let clickCount = 0;
+        const emoji = document.querySelector('.emoji');
+        
+        emoji.addEventListener('click', () => {
+            clickCount++;
+            
+            const emojis = ['🏖️', '🌴', '😴', '🎮', '☕', '🍕', '🎉', '🦄', '🚀', '💤', '🎯', '🌊', '🍹', '🏄'];
+            emoji.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+            
+            if (clickCount === 5) {
+                alert('🎊 Achievement Sbloccato: "Master del Click Inutile"! +0 ore fatturabili 🏆');
+            }
+            
+            if (clickCount === 10) {
+                const messageBox = document.querySelector('.message-box');
+                messageBox.innerHTML = '<p><strong>🎮 SUPER EASTER EGG SBLOCCATO!</strong></p><p>Congratulazioni! Hai cliccato abbastanza volte da meritarti un caffè! ☕</p><p>Ore rendicontabili: 0.0h (ovviamente) 😄</p>';
+                messageBox.style.background = 'rgba(255, 215, 0, 0.2)';
+                messageBox.style.borderColor = 'rgba(255, 215, 0, 0.5)';
+            }
+        });
+
+        // Animazione titolo pagina
+        let titleFrames = [
+            '404 - Attività Non Trovata',
+            '🔴 404 - Attività Non Trovata',
+            '404 🔴 Attività Non Trovata',
+            '404 - 🔴 Attività Non Trovata',
+            '404 - Attività 🔴 Non Trovata',
+            '404 - Attività Non 🔴 Trovata',
+            '404 - Attività Non Trovata 🔴'
+        ];
+        let currentFrame = 0;
+        
+        setInterval(() => {
+            document.title = titleFrames[currentFrame];
+            currentFrame = (currentFrame + 1) % titleFrames.length;
+        }, 500);
+
+        // Console Easter Egg
+        console.log('%c🎯 IUM2 - Sistema Rendicontazione', 'color: #667eea; font-size: 24px; font-weight: bold;');
+        console.log('%c404 - Pagina Non Trovata', 'color: #ff6b6b; font-size: 18px;');
+        console.log('%cSe stai vedendo questo messaggio, probabilmente sei uno sviluppatore curioso! 🧑‍💻', 'color: #51cf66; font-size: 14px;');
+        console.log('%cOre rendicontabili per questa attività: 0h 😄', 'color: #ffd700; font-size: 12px; font-style: italic;');
+        console.log('%c\nEaster Egg: Prova a cliccare 10 volte sull\'emoji! 🎮', 'color: #ff6b6b; font-size: 12px;');
+    </script>
+</body>
+</html>

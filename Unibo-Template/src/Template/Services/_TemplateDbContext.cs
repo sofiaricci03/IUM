@@ -25,6 +25,7 @@ namespace Template.Services
         public DbSet<RichiestaFerie> RichiestaFerie { get; set; }
         public DbSet<RendicontazioneMensile> RendicontazioniMensili { get; set; }
         public DbSet<AssegnazioneDipendenteProgetto> AssegnazioniDipendentiProgetti { get; set; }
+        public DbSet<Fattura> Fatture { get; set; }  
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

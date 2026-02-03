@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>403 - Progetto Non Assegnato | IUM2</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 20px;
+            position: relative;
+        }
+
+        /* Locks animate di sfondo */
+        .lock-icon {
+            position: fixed;
+            font-size: 40px;
+            opacity: 0.1;
+            animation: float 15s infinite;
+            pointer-events: none;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0) rotate(0deg);
+            }
+            50% {
+                transform: translateY(-50px) rotate(180deg);
+            }
+        }
+
+        .container {
+            text-align: center;
+            color: white;
+            z-index: 10;
+            max-width: 800px;
+            width: 100%;
+            padding: 40px 20px;
+        }
+
+        .error-code {
+            font-size: 180px;
+            font-weight: 900;
+            line-height: 1;
+            text-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            margin-bottom: 20px;
+            animation: shake 3s infinite;
+        }
+
+        @keyframes shake {
+            0%, 100% {
+                transform: translateX(0);
+            }
+            10%, 30%, 50%, 70%, 90% {
+                transform: translateX(-5px);
+            }
+            20%, 40%, 60%, 80% {
+                transform: translateX(5px);
+            }
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 10px 25px;
+            background: rgba(255, 255, 255, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            border-radius: 50px;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 30px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.05);
+                opacity: 0.9;
+            }
+        }
+
+        h1 {
+            font-size: 42px;
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+
+        .message-box {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            margin: 30px 0;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .message-box p {
+            font-size: 18px;
+            line-height: 1.8;
+            margin-bottom: 15px;
+        }
+
+        .emoji {
+            font-size: 80px;
+            animation: lock-shake 1s infinite;
+            display: inline-block;
+            margin: 20px 0;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        @keyframes lock-shake {
+            0%, 100% {
+                transform: rotate(0deg);
+            }
+            25% {
+                transform: rotate(-10deg);
+            }
+            75% {
+                transform: rotate(10deg);
+            }
+        }
+
+        .access-denied-box {
+            background: rgba(255, 255, 255, 0.95);
+            color: #333;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 30px 0;
+            text-align: left;
+            border-left: 5px solid #f5576c;
+        }
+
+        .access-denied-box h3 {
+            color: #f5576c;
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+
+        .access-denied-box .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .access-denied-box .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .access-denied-box .label {
+            font-weight: 600;
+            color: #666;
+        }
+
+        .access-denied-box .value {
+            color: #f5576c;
+            font-weight: bold;
+        }
+
+        .suggestion-box {
+            background: rgba(255, 255, 255, 0.95);
+            color: #333;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 30px 0;
+            text-align: left;
+        }
+
+        .suggestion-box h3 {
+            color: #f093fb;
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+
+        .suggestion-box ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .suggestion-box li {
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+            font-size: 16px;
+        }
+
+        .suggestion-box li:last-child {
+            border-bottom: none;
+        }
+
+        .suggestion-box li::before {
+            content: "🔓 ";
+            margin-right: 10px;
+        }
+
+        .buttons {
+            margin-top: 40px;
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 15px 40px;
+            font-size: 18px;
+            font-weight: 600;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: white;
+            color: #f5576c;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid white;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-3px);
+        }
+
+        .fun-fact {
+            margin-top: 40px;
+            margin-bottom: 40px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            font-size: 14px;
+            font-style: italic;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 30px 15px;
+            }
+
+            .error-code {
+                font-size: 100px;
+            }
+
+            h1 {
+                font-size: 28px;
+            }
+
+            .message-box p {
+                font-size: 16px;
+            }
+
+            .buttons {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+
+            .emoji {
+                font-size: 60px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Locks animate -->
+    <script>
+        for(let i = 0; i < 15; i++) {
+            const lock = document.createElement('div');
+            lock.className = 'lock-icon';
+            lock.textContent = '🔒';
+            lock.style.left = Math.random() * 100 + '%';
+            lock.style.top = Math.random() * 100 + '%';
+            lock.style.animationDelay = Math.random() * 15 + 's';
+            document.body.appendChild(lock);
+        }
+    </script>
+
+    <div class="container">
+        <div class="error-code">403</div>
+        
+        <div class="status-badge">🔒 ACCESSO NEGATO</div>
+
+        <h1>Progetto Non Assegnato!</h1>
+
+        <div class="emoji">🚫</div>
+
+        <div class="suggestion-box">
+            <h3>🔑 Come ottenere l'accesso:</h3>
+            <ul>
+                <li>Verifica di essere loggato con l'account corretto</li>
+                <li>Chiedi al responsabile di assegnarti al progetto</li>
+                <li>Controlla che il progetto sia ancora attivo</li>
+                <li>Verifica nella pagina Progetti la lista delle tue assegnazioni</li>
+            </ul>
+        </div>
+
+        <div class="buttons">
+            <a href="/" class="btn btn-primary">🏠 Torna alla Dashboard</a>
+            <a href="javascript:history.back()" class="btn btn-secondary">⬅️ Torna Indietro</a>
+        </div>
+
+        <div class="fun-fact">
+            💡 <strong>Tip:</strong> In caso di dubbio, la risposta è sempre "Hai provato a spegnerlo e riaccenderlo?" 
+            Oppure "Chiedi al responsabile" 😄
+        </div>
+    </div>
+
+    <script>
+        // Animazione titolo
+        let titleFrames = [
+            '403 - Accesso Negato',
+            '🔒 403 - Accesso Negato',
+            '403 🔒 Accesso Negato',
+            '403 - 🔒 Accesso Negato',
+            '403 - Accesso 🔒 Negato',
+            '403 - Accesso Negato 🔒'
+        ];
+        let currentFrame = 0;
+        
+        setInterval(() => {
+            document.title = titleFrames[currentFrame];
+            currentFrame = (currentFrame + 1) % titleFrames.length;
+        }, 500);
+
+        // Easter egg: click sull'emoji
+        let clickCount = 0;
+        const emoji = document.querySelector('.emoji');
+        
+        emoji.addEventListener('click', () => {
+            clickCount++;
+            
+            const emojis = ['🚫', '🔒', '⛔', '🚷', '🔐', '🛑', '❌', '🙅', '🚪', '🔑'];
+            emoji.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+            
+            if (clickCount === 5) {
+                alert('🎯 Achievement: "Insistente"!\nContinui a cliccare ma l\'accesso è sempre negato! 😅');
+            }
+            
+            if (clickCount === 10) {
+                const messageBox = document.querySelector('.message-box');
+                messageBox.innerHTML = '<p style="font-size: 20px;">🎮 <strong>SUPER EASTER EGG!</strong></p><p>Ok ok, hai dimostrato abbastanza determinazione.<br>Ma l\'accesso è ancora negato! 🔒😂</p>';
+                messageBox.style.background = 'rgba(255, 87, 108, 0.3)';
+                
+                // Cambia tutti i locks in chiavi
+                document.querySelectorAll('.lock-icon').forEach(lock => {
+                    lock.textContent = '🔓';
+                    lock.style.color = '#4CAF50';
+                });
+            }
+        });
+
+        // Console
+        console.log('%c🔒 ACCESSO NEGATO', 'color: #f5576c; font-size: 24px; font-weight: bold;');
+        console.log('%c403 - Forbidden', 'color: #f093fb; font-size: 18px;');
+        console.log('%cNon hai i permessi necessari per questa risorsa! 🚫', 'color: #ff6b6b; font-size: 14px;');
+        console.log('%c\nEaster Egg: Clicca 10 volte sul simbolo 🚫 per sbloccare... nulla! 😄', 'color: #51cf66; font-size: 12px;');
+    </script>
+</body>
+</html>

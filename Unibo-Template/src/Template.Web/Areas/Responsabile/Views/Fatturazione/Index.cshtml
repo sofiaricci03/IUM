@@ -1,0 +1,486 @@
+@{
+    Layout = "_LayoutHtml";
+    ViewData["Title"] = "Fatturazione Clienti";
+}
+
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="mb-1">
+                <i class="fas fa-file-invoice-dollar me-2"></i>
+                Fatturazione Clienti
+            </h2>
+            <p class="text-muted">Gestione fatturazione progetti verso clienti</p>
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <ul class="nav nav-tabs mb-4" id="fatturazioneTab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="progetti-tab" data-bs-toggle="tab" data-bs-target="#progetti" 
+                    type="button" role="tab">
+                <i class="fas fa-project-diagram me-2"></i>Progetti da Fatturare
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="fatture-tab" data-bs-toggle="tab" data-bs-target="#fatture" 
+                    type="button" role="tab" onclick="loadFatture()">
+                <i class="fas fa-file-invoice me-2"></i>Fatture Emesse
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="fatturazioneTabContent">
+        <!-- TAB PROGETTI -->
+        <div class="tab-pane fade show active" id="progetti" role="tabpanel">
+            <div id="progetti-container" class="row">
+                <!-- Caricato via JavaScript -->
+            </div>
+        </div>
+
+        <!-- TAB FATTURE EMESSE -->
+        <div class="tab-pane fade" id="fatture" role="tabpanel">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="fatture-table">
+                            <thead>
+                                <tr>
+                                    <th>N° Fattura</th>
+                                    <th>Data</th>
+                                    <th>Cliente</th>
+                                    <th>Progetto</th>
+                                    <th>Ore</th>
+                                    <th>Importo</th>
+                                    <th>Stato</th>
+                                    <th>Azioni</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Caricato via JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODALE FATTURAZIONE -->
+<div class="modal fade" id="modalFatturazione" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-file-invoice me-2"></i>
+                    Genera Fattura
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <!-- COLONNA SINISTRA: Input -->
+                    <div class="col-md-5">
+                        <h6 class="fw-bold mb-3">Dati Progetto</h6>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Progetto</label>
+                            <input type="text" class="form-control" id="modal-progetto" readonly>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Cliente</label>
+                            <input type="text" class="form-control" id="modal-cliente" readonly>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Periodo</label>
+                            <input type="text" class="form-control" id="modal-periodo" readonly>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Ore Totali Rendicontate</label>
+                            <input type="text" class="form-control fw-bold" id="modal-ore-totali" readonly>
+                        </div>
+
+                        <hr>
+
+                        <h6 class="fw-bold mb-3">Parametri Fatturazione</h6>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">
+                                Costo Orario (€/ora) <span class="text-danger">*</span>
+                            </label>
+                            <input type="number" class="form-control form-control-lg" id="input-costo-orario" 
+                                   step="0.01" min="0" placeholder="es. 75.00" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">IVA %</label>
+                            <select class="form-select" id="input-iva">
+                                <option value="0">Esente</option>
+                                <option value="4">4%</option>
+                                <option value="10">10%</option>
+                                <option value="22" selected>22%</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Note (opzionali)</label>
+                            <textarea class="form-control" id="input-note" rows="3" 
+                                      placeholder="Note aggiuntive per la fattura..."></textarea>
+                        </div>
+
+                        <button type="button" class="btn btn-primary btn-lg w-100 mb-2" onclick="generaPreview()">
+                            <i class="fas fa-eye me-2"></i>Genera Preview
+                        </button>
+                    </div>
+
+                    <!-- COLONNA DESTRA: Preview Fattura -->
+                    <div class="col-md-7">
+                        <div id="preview-container" class="d-none">
+                            <h6 class="fw-bold mb-3">Preview Fattura</h6>
+                            
+                            <!-- FATTURA PREVIEW -->
+                            <div class="border rounded p-4 bg-light" style="min-height: 500px;">
+                                <div class="text-center mb-4">
+                                    <h4 class="fw-bold">FATTURA</h4>
+                                    <p class="mb-0">N° <span id="preview-numero" class="fw-bold"></span></p>
+                                    <p class="text-muted small">Data: <span id="preview-data"></span></p>
+                                </div>
+
+                                <div class="row mb-4">
+                                    <div class="col-6">
+                                        <p class="mb-1 text-muted small">FORNITORE</p>
+                                        <p class="fw-bold mb-0">La Tua Azienda S.r.l.</p>
+                                        <p class="small mb-0">Via Example 123</p>
+                                        <p class="small mb-0">40100 Bologna (BO)</p>
+                                        <p class="small">P.IVA: IT12345678901</p>
+                                    </div>
+                                    <div class="col-6">
+                                        <p class="mb-1 text-muted small">CLIENTE</p>
+                                        <p class="fw-bold mb-0" id="preview-cliente-nome"></p>
+                                    </div>
+                                </div>
+
+                                <hr>
+
+                                <div class="mb-4">
+                                    <p class="mb-1"><strong>Progetto:</strong> <span id="preview-progetto"></span></p>
+                                    <p class="mb-1"><strong>Periodo:</strong> <span id="preview-periodo-preview"></span></p>
+                                </div>
+
+                                <table class="table table-sm table-bordered">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Descrizione</th>
+                                            <th class="text-end">Ore</th>
+                                            <th class="text-end">€/h</th>
+                                            <th class="text-end">Totale</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>Attività di sviluppo software</td>
+                                            <td class="text-end" id="preview-ore"></td>
+                                            <td class="text-end" id="preview-costo-orario"></td>
+                                            <td class="text-end fw-bold" id="preview-imponibile"></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+
+                                <div class="mt-4">
+                                    <div class="row">
+                                        <div class="col-6 offset-6">
+                                            <table class="table table-sm">
+                                                <tr>
+                                                    <td>Imponibile:</td>
+                                                    <td class="text-end fw-bold" id="preview-totale-imponibile"></td>
+                                                </tr>
+                                                <tr>
+                                                    <td>IVA (<span id="preview-perc-iva"></span>%):</td>
+                                                    <td class="text-end" id="preview-importo-iva"></td>
+                                                </tr>
+                                                <tr class="table-primary">
+                                                    <td class="fw-bold">TOTALE:</td>
+                                                    <td class="text-end fw-bold fs-5" id="preview-totale-finale"></td>
+                                                </tr>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mt-3" id="preview-note-container" style="display:none;">
+                                    <p class="text-muted small mb-1"><strong>Note:</strong></p>
+                                    <p class="small" id="preview-note"></p>
+                                </div>
+                            </div>
+
+                            <!-- PULSANTE INVIA -->
+                            <div class="mt-4 text-center">
+                                <button type="button" class="btn btn-success btn-lg px-5" onclick="inviaFattura()">
+                                    <i class="fas fa-paper-plane me-2"></i>Invia al Cliente
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- MESSAGGIO INIZIALE -->
+                        <div id="preview-placeholder" class="text-center text-muted py-5">
+                            <i class="fas fa-file-invoice fa-4x mb-3 opacity-25"></i>
+                            <p>Inserisci il costo orario e clicca su "Genera Preview" per visualizzare l'anteprima della fattura</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    let progettoSelezionato = null;
+    let previewData = null;
+
+    // INIT
+    $(document).ready(function () {
+        loadProgetti();
+    });
+
+    // =========================
+    // PROGETTI DA FATTURARE
+    // =========================
+    function loadProgetti() {
+        fetch('/Responsabile/Fatturazione/GetProgetti')
+            .then(r => {
+                if (!r.ok) throw new Error('Errore caricamento progetti');
+                return r.json();
+            })
+            .then(data => renderProgetti(data))
+            .catch(err => {
+                console.error(err);
+                $('#progetti-container').html(`
+                    <div class="col-12 text-danger text-center">
+                        Errore nel caricamento dei progetti
+                    </div>
+                `);
+            });
+    }
+
+    function renderProgetti(progetti) {
+        const container = $('#progetti-container');
+        container.empty();
+
+        if (!progetti || progetti.length === 0) {
+            container.append(`
+                <div class="col-12 text-center text-muted">
+                    Nessun progetto da fatturare
+                </div>
+            `);
+            return;
+        }
+
+        progetti.forEach(p => {
+            const disabled = p.oreTotali === 0;
+            container.append(`
+                <div class="col-md-4 mb-4">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title">${p.nome}</h5>
+                            <p class="text-muted mb-2">${p.cliente}</p>
+
+                            <p class="small mb-1">
+                                Ore approvate: <strong>${p.oreTotali.toFixed(2)}</strong>
+                            </p>
+
+                            <p class="small mb-3">
+                                Fatture emesse: <strong>${p.numeroFatture}</strong>
+                            </p>
+
+                            <button class="btn btn-primary mt-auto"
+                                    onclick="apriFatturazione(${p.id})"
+                                    ${disabled ? 'disabled' : ''}>
+                                <i class="fas fa-file-invoice"></i>
+                                Fattura progetto
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `);
+        });
+    }
+
+    // =========================
+    // MODALE FATTURAZIONE
+    // =========================
+    function apriFatturazione(progettoId) {
+        progettoSelezionato = progettoId;
+
+        $('#input-costo-orario').val('');
+        $('#input-iva').val('22');
+        $('#input-note').val('');
+        $('#preview-container').addClass('d-none');
+        $('#preview-placeholder').removeClass('d-none');
+
+        fetch(`/Responsabile/Fatturazione/GetDettaglioProgetto?progettoId=${progettoId}`)
+            .then(r => {
+                if (!r.ok) throw new Error();
+                return r.json();
+            })
+            .then(data => {
+                $('#modal-progetto').val(data.nomeProgetto);
+                $('#modal-cliente').val(data.cliente);
+                $('#modal-periodo').val(`${formatDate(data.periodoDa)} - ${formatDate(data.periodoA)}`);
+                $('#modal-ore-totali').val(`${data.oreTotali.toFixed(2)} ore`);
+
+                new bootstrap.Modal(document.getElementById('modalFatturazione')).show();
+            })
+            .catch(() => alert('Errore caricamento progetto'));
+    }
+
+    // =========================
+    // PREVIEW
+    // =========================
+    function generaPreview() {
+        const costo = parseFloat($('#input-costo-orario').val());
+        const iva = parseFloat($('#input-iva').val());
+
+        if (!costo || costo <= 0) {
+            alert('Inserisci un costo orario valido');
+            return;
+        }
+
+        fetch('/Responsabile/Fatturazione/GeneraPreview', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                progettoId: progettoSelezionato,
+                costoOrario: costo,
+                percentualeIva: iva,
+                note: $('#input-note').val()
+            })
+        })
+        .then(r => r.json())
+        .then(data => {
+            previewData = data;
+            renderPreview(data);
+        })
+        .catch(() => alert('Errore preview fattura'));
+    }
+
+    function renderPreview(d) {
+        $('#preview-numero').text(d.numeroFattura);
+        $('#preview-data').text(formatDate(d.dataEmissione));
+        $('#preview-cliente-nome').text(d.cliente);
+        $('#preview-progetto').text(d.nomeProgetto);
+        $('#preview-periodo-preview').text(`${formatDate(d.periodoDa)} - ${formatDate(d.periodoA)}`);
+        $('#preview-ore').text(d.oreTotali.toFixed(2));
+        $('#preview-costo-orario').text(`€ ${d.costoOrario.toFixed(2)}`);
+        $('#preview-imponibile').text(`€ ${d.importoImponibile.toFixed(2)}`);
+        $('#preview-totale-imponibile').text(`€ ${d.importoImponibile.toFixed(2)}`);
+        $('#preview-perc-iva').text(d.percentualeIva);
+        $('#preview-importo-iva').text(`€ ${d.importoIva.toFixed(2)}`);
+        $('#preview-totale-finale').text(`€ ${d.importoTotale.toFixed(2)}`);
+
+        if (d.note) {
+            $('#preview-note').text(d.note);
+            $('#preview-note-container').show();
+        } else {
+            $('#preview-note-container').hide();
+        }
+
+        $('#preview-placeholder').addClass('d-none');
+        $('#preview-container').removeClass('d-none');
+    }
+
+    // =========================
+    // INVIO FATTURA
+    // =========================
+    function inviaFattura() {
+        if (!previewData) return;
+
+        if (!confirm(`Inviare la fattura ${previewData.numeroFattura}?`)) return;
+
+        fetch('/Responsabile/Fatturazione/InviaFattura', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                progettoId: progettoSelezionato,
+                costoOrario: parseFloat($('#input-costo-orario').val()),
+                percentualeIva: parseFloat($('#input-iva').val()),
+                note: $('#input-note').val()
+            })
+        })
+        .then(r => r.json())
+        .then(res => {
+            alert(res.message);
+            bootstrap.Modal.getInstance(document.getElementById('modalFatturazione')).hide();
+            loadProgetti();
+        })
+        .catch(() => alert('Errore invio fattura'));
+    }
+
+    // =========================
+    // FATTURE EMESSE
+    // =========================
+    function loadFatture() {
+        fetch('/Responsabile/Fatturazione/GetFatture')
+            .then(r => r.json())
+            .then(renderFatture);
+    }
+
+    function renderFatture(fatture) {
+        const tbody = $('#fatture-table tbody').empty();
+
+        if (!fatture.length) {
+            tbody.append('<tr><td colspan="8" class="text-center text-muted">Nessuna fattura</td></tr>');
+            return;
+        }
+
+        fatture.forEach(f => {
+            tbody.append(`
+                <tr>
+                    <td><strong>${f.numeroFattura}</strong></td>
+                    <td>${formatDate(f.dataEmissione)}</td>
+                    <td>${f.cliente}</td>
+                    <td>${f.nomeProgetto}</td>
+                    <td>${f.oreTotali.toFixed(1)}h</td>
+                    <td>€ ${f.importoTotaleConIva.toFixed(2)}</td>
+                    <td><span class="badge bg-primary">${f.stato}</span></td>
+                    <td>-</td>
+                </tr>
+            `);
+        });
+    }
+
+    function formatDate(d) {
+        return d ? new Date(d).toLocaleDateString('it-IT') : '';
+    }
+</script>
+}
+
+
+<style>
+    .nav-tabs .nav-link {
+        color: #6c757d;
+        font-weight: 500;
+    }
+
+    .nav-tabs .nav-link.active {
+        color: #0d6efd;
+        font-weight: 600;
+    }
+
+    .table-hover tbody tr:hover {
+        background-color: #f8f9fa;
+        cursor: pointer;
+    }
+
+    .modal-xl {
+        max-width: 1200px;
+    }
+
+    #preview-container .border {
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+</style>
