@@ -238,9 +238,10 @@ body {
 }
 
 .onit-page .btn-primary {
-    width: 100%;              
+    width: 17%;              
     padding: 12px;
     font-weight: 600;
+    flex-shrink: 0;
 }
 
 @media (max-width: 576px) {
@@ -258,4 +259,39 @@ body {
 
 .onit-toolbar button {
     flex-shrink: 0; 
+}
+
+/* Riduce tutti i btn-sm */
+.btn-sm {
+    padding: 2px 6px;      
+    font-size: 0.75rem;    
+    line-height: 1;        
+    border-radius: 6px;    
+}
+
+/* Riduce le icone dentro i btn-sm */
+.btn-sm i {
+    font-size: 0.8rem;
+}
+
+/* Tutti i btn-primary diventano trasparenti di default */
+.btn-primary {
+    background-color: transparent;
+    border-color: var(--bs-primary); 
+    color: var(--bs-primary);       
+    transition: all 0.3s ease;     
+}
+.btn-secondary {
+    background-color: transparent;
+    border-color: var(--bs-primary); /* mantiene il bordo blu */
+    color: var(--bs-primary);        /* testo blu */
+    transition: all 0.3s ease;      /* effetto morbido */
+}
+
+/* Al passaggio del mouse diventano pieni */
+.btn-primary:hover,
+.btn-primary:focus {
+    background-color: var(--bs-primary);
+    color: #fff;                     /* testo bianco */
+    border-color: var(--bs-primary);
 }
