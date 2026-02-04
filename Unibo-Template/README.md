@@ -269,15 +269,15 @@ Funzionalità Implementate
 
 ## Dashboard Progetti Fatturabili:
 
-![Progetti ](./screenshot_app/progetti)
+![Progetti ](./screenshot_app/progetti.png)
 
 ### Flusso:
 Utente rendiconta le ore totali relative ad un progetto -> responsabile riceve rendicontazione -> progetto completato -> si può fatturare 
 
 
 ### Generazione Fattura:
-![Genera fattura](./screenshot_app/genera_fattura)
-![Genera fattura](./screenshot_app/genera_fattura2)
+![Genera fattura](./screenshot_app/genera_fattura.png)
+![Genera fattura](./screenshot_app/genera_fattura2.png)
 Form input: Costo Orario, IVA%, Note
 Calcolo automatico live: Imponibile, IVA, Totale
 Preview fattura formattata in tempo reale
@@ -285,7 +285,7 @@ Numerazione progressiva automatica (2026/XXX)
 
 Invio Fattura:
 
-![Genera fattura](./screenshot_app/invia_fattura)
+![Genera fattura](./screenshot_app/invia_fattura.png)
 
 Tabella fatture emesse
 Filtri per cliente, progetto, periodo
