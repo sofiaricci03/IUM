@@ -1,4 +1,9 @@
 ## Progetto Interfaccia Uomo-Macchina
+ Per documentazione completa, documentazione per ogni feature implementata, figma:
+ 
+[Documentazione Completa](./DOCUMENTAZIONE.md)
+
+[Figma](figma.md)
 
 ### come riprodurre in localhost:
 
