@@ -1,20 +1,25 @@
-Caso di Studio: Sistema di Rendicontazione e Fatturazione Attività
-Laboratorio di Interfaccia Uomo-Macchina 2024-2025
+### Caso di Studio: Sistema di Rendicontazione e Fatturazione Attività
+Laboratorio di Interfaccia Uomo-Macchina 
 
-Slide 1 - Nascita dell'Esigenza
+## Nascita dell'Esigenza
+
 Contesto Aziendale
-Nel 2025, un'azienda di consulenza IT con forte crescita nel settore dei servizi a valore ha evidenziato criticità nella gestione delle ore lavorate e nella conseguente fatturazione ai clienti. Questa necessità ha portato alla nascita del progetto "Timesheet & Billing System".
-Obiettivo del Progetto
+
+Un'azienda di consulenza IT con forte crescita nel settore dei servizi a valore ha evidenziato criticità nella gestione delle ore lavorate e nella conseguente fatturazione ai clienti. Questa necessità ha portato alla nascita del progetto **"Rendicontazione Attività"**.
+
+# Obiettivo del Progetto
 Il progetto prevede lo sviluppo di una piattaforma software che permetta di:
 
-Tracciare in maniera precisa le ore lavorate dai dipendenti
-Rendicontare mensilmente le attività svolte
-Approvare/respingere le rendicontazioni con feedback strutturato
-Fatturare automaticamente i clienti basandosi sulle ore approvate
+- Tracciare in maniera precisa le ore lavorate dai dipendenti
+- Rendicontare mensilmente le attività svolte
+- Approvare/respingere le rendicontazioni con feedback strutturato
+- Fatturare automaticamente i clienti basandosi sulle ore approvate
 
 
-Slide 2 - Analisi del Contesto
+## Analisi del Contesto
+
 Struttura Aziendale
+
 L'azienda è una realtà che conta circa 50 dipendenti organizzati in:
 
 Area Development (20 persone)
@@ -32,7 +37,8 @@ SLA contrattuali da rispettare
 Necessità di tracciabilità completa per audit e conformità
 
 
-Slide 3 - Flusso Base Dipendente
+## Flusso Base Dipendente
+
 Ciclo Mensile Standard
 
 Dipendente registra quotidianamente le attività nel calendario
@@ -48,7 +54,8 @@ Se approvata, le ore diventano fatturabili
 Se respinta, il dipendente deve correggere e reinviare
 
 
-Slide 4 - Interviste: Pain Points Emersi
+## Interviste: Pain Points Emersi
+
 Interviste condotte con 11 persone (8 dipendenti + 3 responsabili)
 Durata interviste: 3 settimane (Gennaio 2026)
 Problematiche Dipendenti
@@ -61,7 +68,7 @@ Mancanza di visibilità sui progetti assegnati
 Confusione su quali progetti possono registrare ore
 
 
-Slide 5 - Interviste: Pain Points Responsabili
+## Interviste: Pain Points Responsabili
 Criticità Emerse
 
 Volume elevato di rendicontazioni da esaminare (10-15 al mese)
@@ -77,7 +84,7 @@ Quote Significative
 "Devo incrociare ore approvate con tariffe cliente, calcolare IVA... è un incubo che richiede 2 ore ogni mese solo per fatturare" - Anna, Project Manager
 
 
-Slide 6 - Service Blueprint: Registrazione Attività
+## Service Blueprint: Registrazione Attività
 Front Stage (Azioni Utente Visibili)
 Login → Visualizza Calendario → Clicca Giorno → 
 Modale "Registra Attività" → Seleziona Progetto (dropdown) → 
@@ -94,12 +101,11 @@ Validazione: Progetto assegnato? Ore > 0? Date valide? →
 Salvataggio: INSERT AttivitaLavorativa →
 Timestamp creazione
 Support Processes
-Database: AttivitaLavorative, AssegnazioniProgetti, Progetti →
-Sistema notifiche (email/in-app) →
-Backup automatico ogni 6 ore
+Database: AttivitaLavorative, AssegnazioniProgetti, Progetti 
 
-Slide 7 - Service Blueprint: Fatturazione
-Front Stage (Responsabile)
+## Service Blueprint: Fatturazione
+
+# Front Stage (Responsabile)
 Rendicontazione → Approva tutte del mese → 
 Fatturazione → Visualizza "Progetti da Fatturare" →
 Seleziona Progetto → Inserisce Tariffa Oraria e IVA →
@@ -107,25 +113,21 @@ Seleziona Progetto → Inserisce Tariffa Oraria e IVA →
 "Invia al Cliente"
 On Stage
 Card progetti con ore fatturabili →
-Form input: Costo Orario, IVA %, Note →
+Form input: Costo Orario,  Note →
 Preview LIVE con calcolo automatico:
   - Imponibile = Ore × Tariffa
-  - IVA = Imponibile × (IVA% / 100)
-  - Totale = Imponibile + IVA
 Numero fattura PROGRESSIVO automatico (2026/XXX)
-Back Stage
+
+# Back Stage
 Aggregazione ore approvate per progetto →
 Calcolo totali con formule predefinite →
 Generazione numero progressivo (query MAX + 1) →
 Salvataggio fattura in database →
 Update stato ore: "Fatturate"
 Support Processes
-Algoritmo numerazione progressiva annuale →
-Sistema calcolo IVA multipla (0%, 4%, 10%, 22%) →
-Export PDF fatture (future) →
-Integrazione contabilità (future)
+Algoritmo numerazione progressiva annuale 
 
-Slide 8 - Line of Visibility
+## Line of Visibility
 Struttura a Layers
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 UTENTE (Dipendente/Responsabile)
@@ -149,17 +151,17 @@ SUPPORT SYSTEMS
   - Backup automatici
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Slide 9 - Milestone di Sviluppo
+### Milestone di Sviluppo
 Roadmap Biennale (2025-2026)
 Queste informazioni raccolte sono state racchiuse a livello di progettazione in 4 grandi macrocapitoli da sviluppare su base annuale:
 
-Registrazione Attività e Rendicontazione Base (Q4 2025) ✅
-Approvazione con Feedback Strutturato (Q1 2026) ✅
-Fatturazione Automatica (Q1 2026) ✅ [KILLER FEATURE]
+Registrazione Attività e Rendicontazione Base (Q4 2025) 
+Approvazione con Feedback Strutturato (Q1 2026) 
+Fatturazione Automatica (Q1 2026) 
 Sistema Reminder e Notifiche Intelligenti (Q2 2026) ⏳
 
 
-Slide 10 - Milestone 1: Registrazione e Rendicontazione
+### Milestone 1: Registrazione e Rendicontazione
 Obiettivo
 Permettere ai dipendenti di tracciare quotidianamente le ore lavorate e rendicontare mensilmente in modo automatizzato.
 Funzionalità Implementate
@@ -182,9 +184,9 @@ Invio con conferma
 Risultato
 Sistema base funzionante per tracciamento ore quotidiano con rendicontazione automatizzata.
 
-Slide 11 - Milestone 1: Design Calendario
-[MOCKUP: Calendario Mensile]
-(Tralasciando screenshot)
+### Milestone 1: Design Calendario
+[./screenshot_app/calendario_attivita.png]
+
 Elementi chiave visibili:
 
 Sidebar sinistra con menu: Attività, Rendicontazione, Congedo, Progetti
