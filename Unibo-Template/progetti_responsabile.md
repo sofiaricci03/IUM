@@ -456,12 +456,4 @@ A: **Sì**, vai su "Modifica" e deseleziona "Progetto Completato".
 
 ---
 
-## Supporto
-Per assistenza tecnica:
-- 📧 Email: admin@azienda.it
-- 📞 Telefono: +39 051 1234567
 
----
-
-**Ultima modifica**: Febbraio 2026  
-**Versione**: 1.0

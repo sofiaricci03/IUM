@@ -337,14 +337,3 @@ Prima di inviare la rendicontazione, verifica:
 ✅ **Se tutti i punti sono verificati, puoi inviare!**
 
 ---
-
-## Supporto
-Per assistenza:
-- 📧 Email: supporto@azienda.it
-- 📞 Telefono: +39 051 1234567
-- 💬 Chat: #supporto-rendicontazione
-
----
-
-**Ultima modifica**: Febbraio 2026  
-**Versione**: 1.0

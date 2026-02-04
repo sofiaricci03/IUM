@@ -185,13 +185,3 @@ A: Puoi registrare attività anche nei weekend. Il conteggio ore non fa distinzi
 
 ---
 
-## Supporto
-Per assistenza tecnica o domande:
-- 📧 Email: supporto@azienda.it
-- 📞 Telefono: +39 051 1234567
-- 💬 Chat interna: #supporto-timesheet
-
----
-
-**Ultima modifica**: Febbraio 2026  
-**Versione**: 1.0

@@ -354,13 +354,3 @@ A: Comunica tempestivamente al Responsabile. Insieme troverete una soluzione (es
 
 ---
 
-## Supporto
-Per assistenza:
-- 📧 Email: supporto@azienda.it
-- 📞 Telefono: +39 051 1234567
-- 💬 Chat: #supporto-progetti
-
----
-
-**Ultima modifica**: Febbraio 2026  
-**Versione**: 1.0

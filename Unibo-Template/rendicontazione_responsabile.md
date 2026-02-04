@@ -438,12 +438,3 @@ Prima di approvare, verifica:
 
 ---
 
-## Supporto
-Per assistenza:
-- 📧 Email: admin@azienda.it
-- 📞 Telefono: +39 051 1234567
-
----
-
-**Ultima modifica**: Febbraio 2026  
-**Versione**: 1.0
