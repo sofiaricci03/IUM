@@ -238,10 +238,16 @@ body {
 }
 
 .onit-page .btn-primary {
+<<<<<<< HEAD
+    width: 100%;              
+    padding: 12px;
+    font-weight: 600;
+=======
     width: 17%;              
     padding: 12px;
     font-weight: 600;
     flex-shrink: 0;
+>>>>>>> d2331b3c4cd5b7a8740e273a200558f92b683a92
 }
 
 @media (max-width: 576px) {
@@ -252,6 +258,15 @@ body {
 }
 
 .onit-toolbar h3 {
+<<<<<<< HEAD
+    white-space: nowrap; /* forza tutto su una riga */
+    overflow: hidden;
+    text-overflow: ellipsis; /* tronca con ... se troppo lungo */
+}
+
+.onit-toolbar button {
+    flex-shrink: 0; /* impedisce al pulsante di ridursi */
+=======
     white-space: nowrap; 
     overflow: hidden;
     text-overflow: ellipsis; 
@@ -294,4 +309,5 @@ body {
     background-color: var(--bs-primary);
     color: #fff;                     /* testo bianco */
     border-color: var(--bs-primary);
+>>>>>>> d2331b3c4cd5b7a8740e273a200558f92b683a92
 }
