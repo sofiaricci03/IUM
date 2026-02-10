@@ -454,7 +454,6 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     // Cambio vista
-    document.getElementById("btnGiorno").addEventListener("click", () => calendar.changeView("timeGridDay"));
     document.getElementById("btnSettimana").addEventListener("click", () => calendar.changeView("timeGridWeek"));
     document.getElementById("btnMese").addEventListener("click", () => calendar.changeView("dayGridMonth"));
 });

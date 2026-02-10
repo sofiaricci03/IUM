@@ -9,7 +9,56 @@
 }
 
 <div class="container-fluid onit-page-content">
-    <div id="calendarFerie" class="onit-card p-3" style="min-height:650px"></div>
+
+    <div class="row">
+        <!-- SIDEBAR ONIT -->
+        <div class="col-2 onit-sidebar">
+            <ul class="onit-sidebar-menu">
+                <li>
+                    <a asp-area="Dipendente"
+                       asp-controller="Dashboard"
+                       asp-action="Index">
+                        <i class="fa-solid fa-calendar-check"></i> Attività
+                    </a>
+                </li>
+                <li>
+                    <a asp-area="Dipendente"
+                       asp-controller="Progetti"
+                       asp-action="Index">
+                        <i class="fa-solid fa-diagram-project"></i> Progetti
+                    </a>
+                </li>
+                <li>
+                    <a asp-area="Dipendente"
+                       asp-controller="Rendicontazione"
+                       asp-action="Index">
+                        <i class="fa-solid fa-clipboard-list"></i> Rendicontazione
+                    </a>
+                </li>
+                <li>
+                    <a class="active"
+                       asp-area="Dipendente"
+                       asp-controller="Congedo"
+                       asp-action="Index">
+                        <i class="fa-solid fa-plane-departure"></i> Congedo
+                    </a>
+                </li>
+                <li>
+                    <a asp-area="Dipendente"
+                       asp-controller="Contratto"
+                       asp-action="Index">
+                        <i class="fa-solid fa-file-contract"></i> Contratto
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- MAIN CONTENT -->
+        <div class="col-10">
+            <div id="calendarFerie" class="onit-card p-3" style="min-height:650px"></div>
+        </div>
+    </div>
+
 </div>
 
 <!-- Modale richiesta -->
