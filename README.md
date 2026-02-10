@@ -3,6 +3,8 @@
  
 [Documentazione Completa](./DOCUMENTAZIONE.md)
 
+[Figma](figma.md)
+[https://www.figma.com/design/6y1OzETWA2KFhK5MAIUMZ3/IUM?node-id=0-1&t=VMKLYt33qqAbwTLu-1]
 [Figma](figma.mdhttps://www.figma.com/design/6y1OzETWA2KFhK5MAIUMZ3/IUM?node-id=0-1&p=f&t=VMKLYt33qqAbwTLu-0)
 
 ### come riprodurre in localhost:
