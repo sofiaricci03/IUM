@@ -15,6 +15,7 @@ document.addEventListener("DOMContentLoaded", function () {
         initialView: "dayGridMonth",
         locale: "it",
         selectable: true,
+        selectMirror: true,
         height: 650,
         headerToolbar: {
             left: "prev,next today",

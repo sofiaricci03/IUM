@@ -223,6 +223,12 @@ document.getElementById("btnSalva").addEventListener("click", async function () 
         const modal = bootstrap.Modal.getInstance(document.getElementById("modaleOre"));
         modal.hide();
         
+        // Rimuovi backdrop e classi residue
+        document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = '';
+        
         calendar.removeAllEvents();
         caricaEventi();
         
@@ -252,6 +258,12 @@ document.getElementById("btnSalva").addEventListener("click", async function () 
         if (res.ok) {
             const modal = bootstrap.Modal.getInstance(document.getElementById("modaleOre"));
             modal.hide();
+            
+            // Rimuovi backdrop e classi residue
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
 
             calendar.removeAllEvents();
             caricaEventi();
@@ -285,6 +297,12 @@ document.getElementById("btnElimina").addEventListener("click", async function (
     if (res.ok) {
         const modal = bootstrap.Modal.getInstance(document.getElementById("modaleOre"));
         modal.hide();
+        
+        // Rimuovi backdrop e classi residue
+        document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = '';
         
         calendar.removeAllEvents();
         caricaEventi();
@@ -454,7 +472,6 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     // Cambio vista
-    document.getElementById("btnGiorno").addEventListener("click", () => calendar.changeView("timeGridDay"));
     document.getElementById("btnSettimana").addEventListener("click", () => calendar.changeView("timeGridWeek"));
     document.getElementById("btnMese").addEventListener("click", () => calendar.changeView("dayGridMonth"));
 });

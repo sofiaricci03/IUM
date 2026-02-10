@@ -1,9 +1,11 @@
 @model Template.Web.Areas.Dipendente.Controllers.DipendenteDashboardViewModel
+@inject IHtmlLocalizer<Template.Web.SharedResource> SharedLocalizer
 @{
     ViewData["Title"] = "Attività – Dashboard Dipendente";
+    var identitaCorrente = (Template.Web.Areas.IdentitaViewModel)ViewData[Template.Web.Areas.IdentitaViewModel.VIEWDATA_IDENTITACORRENTE_KEY];
 }
 
-@section pageTitle {
+@section pageSubtitle {
     <div class="onit-page-title">
         <h1><i class="fa-solid fa-calendar-check"></i> Attività</h1>
     </div>
@@ -61,20 +63,80 @@
             <div class="onit-toolbar d-flex justify-content-between align-items-center mb-3">
 
                 <div class="btn-group">
-                    <button id="btnGiorno" class="btn btn-outline-primary">Giorno</button>
                     <button id="btnSettimana" class="btn btn-outline-primary">Settimana</button>
                     <button id="btnMese" class="btn btn-outline-primary">Mese</button>
                 </div>
 
                 <h3 class="fw-bold" id="titleCalendar">Calendario Attività</h3>
 
-                <div class="btn-group">
-                    <button id="prevBtn" class="btn btn-outline-secondary">
-                        <i class="fa-solid fa-chevron-left"></i>
-                    </button>
-                    <button id="nextBtn" class="btn btn-outline-secondary">
-                        <i class="fa-solid fa-chevron-right"></i>
-                    </button>
+                <div class="d-flex align-items-center gap-2">
+                    <div class="btn-group">
+                        <button id="prevBtn" class="btn btn-outline-secondary">
+                            <i class="fa-solid fa-chevron-left"></i>
+                        </button>
+                        <button id="nextBtn" class="btn btn-outline-secondary">
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </button>
+                    </div>
+
+                    @if (identitaCorrente != null)
+                    {
+                        <div class="nav-item dropdown ms-3">
+                            <a href="#" 
+                               class="nav-link dropdown-toggle d-flex align-items-center" 
+                               type="button" 
+                               id="dropdownProfiloToolbar"
+                               data-bs-toggle="dropdown" 
+                               aria-expanded="false">
+                                <img class="rounded-circle me-2" 
+                                    src="/Profilo/Immagine?v=@DateTime.Now.Ticks" 
+                                    id="currentProfileImage"
+                                    style="width: 35px; height: 35px; object-fit: cover;"
+                                    onerror="this.src='@identitaCorrente.GravatarUrl'" />
+                            
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="dropdownProfiloToolbar" style="min-width: 280px;">
+                                <!-- Header profilo -->
+                                <li class="dropdown-header bg-light">
+                                    <div class="d-flex align-items-center py-2">
+                                        <img src="/Profilo/Immagine?v=@DateTime.Now.Ticks" 
+                                            class="rounded-circle me-3" 
+                                            style="width: 50px; height: 50px; object-fit: cover;"
+                                            onerror="this.src='@identitaCorrente.GravatarUrl'">
+                                        <div>
+                                            <div class="fw-bold text-dark">@identitaCorrente.NomeCompletoUtenteCorrente</div>
+                                            <small class="text-muted">@identitaCorrente.EmailUtenteCorrente</small>
+                                        </div>
+                                    </div>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                
+                                <!-- Opzioni profilo -->
+                                <li>
+                                    <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#modalCambiaFoto">
+                                        <i class="fa-solid fa-camera text-primary"></i> Cambia foto profilo
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="#" onclick="rimuoviFotoProfilo(); return false;">
+                                        <i class="fa-solid fa-trash text-danger"></i> Rimuovi foto
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                
+                                <!-- Logout -->
+                                <li>
+                                    <a class="dropdown-item text-danger" 
+                                       href="javascript:void(0)" 
+                                       onclick="javascript: document.getElementById('POST_LogOut_Dashboard').submit()" 
+                                       title="Chiudi sessione di lavoro">
+                                        <i class="fa-solid fa-right-from-bracket"></i> Esci
+                                    </a>
+                                </li>
+                            </ul>
+                            <form autocomplete="off" method="post" action="@Url.Action(MVC.Login.Logout())" id="POST_LogOut_Dashboard" style="display:none;"></form>
+                        </div>
+                    }
                 </div>
 
             </div>
