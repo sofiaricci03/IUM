@@ -1,0 +1,261 @@
+/* =================================================
+   ONIT GLOBAL CUSTOM THEME
+   ================================================= */
+
+/* ---------- VARIABILI ---------- */
+:root {
+    --onit-primary: #6366f1;
+    --onit-primary-dark: #4f46e5;
+    --onit-bg: #f5f5f7;
+    --onit-surface: #ffffff;
+    --onit-border: #e5e5e5;
+    --onit-radius: 14px;
+}
+
+/* ---------- BASE ---------- */
+body {
+    background: var(--onit-bg);
+}
+
+/* ---------- PAGE WRAPPER ---------- */
+.onit-page {
+    min-height: 100vh;
+    background: var(--onit-bg);
+}
+
+/* ---------- TOP NAVBAR ---------- */
+.onit-page-menu {
+    background: var(--onit-surface) !important;
+    border-bottom: 1px solid var(--onit-border);
+    box-shadow: 0 1px 3px rgba(0,0,0,.06);
+    position: relative; 
+}
+
+.onit-page-menu .navbar-brand img {
+    height: 40px;
+}
+
+/* ---------- SIDEBAR ---------- */
+.onit-sidebar {
+    background: #e1dff4;
+    border-right: 1px solid var(--onit-border);
+    min-height: calc(100vh - 70px);
+    padding-top: 22px;
+    border-radius: 12px;
+}
+
+.onit-sidebar-menu {
+    padding: 0;
+    list-style-type: none;
+}
+
+.onit-sidebar-menu li {
+    margin-bottom: 12px;
+}
+
+.onit-sidebar-menu a {
+    margin: 6px 16px;
+    padding: 12px 16px;
+    border-radius: 10px;
+    color: #555;
+    font-weight: 500;
+    transition: all .2s;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.onit-sidebar-menu a:hover {
+    background: rgba(99,102,241,.08);
+    color: var(--onit-primary);
+}
+
+.onit-sidebar-menu a.active {
+    background: rgba(99,102,241,.15);
+    color: var(--onit-primary);
+    font-weight: 600;
+}
+
+/* ---------- CONTENT ---------- */
+.onit-page-content {
+    padding: 32px;
+}
+
+/* ---------- TITLES ---------- */
+.onit-page-title h1 {
+    font-size: 26px;
+    font-weight: 700;
+}
+
+/* ---------- CARDS ---------- */
+.onit-card {
+    background: var(--onit-surface);
+    border-radius: var(--onit-radius);
+    box-shadow: 0 6px 20px rgba(0,0,0,.06);
+    border: none;
+}
+
+/* ---------- TOOLBAR ---------- */
+.onit-toolbar {
+    background: var(--onit-surface);
+    border-radius: var(--onit-radius);
+    padding: 16px 24px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.05);
+}
+
+/* ---------- DROPDOWN PROFILO ---------- */
+.dropdown-menu {
+    border-radius: var(--onit-radius);
+    border: 1px solid var(--onit-border);
+}
+
+.dropdown-item {
+    border-radius: 8px;
+}
+
+/* ---------- FORM ---------- */
+.form-control,
+.form-select {
+    border-radius: 10px;
+}
+
+/* ---------- RESPONSIVE ---------- */
+@media (max-width: 991px) {
+    .onit-page-content {
+        padding: 20px;
+    }
+}
+
+
+/* Contenitore della foto  */
+.onit-page-menu-user {
+    position: absolute; 
+    right: 16px;        
+    display: flex;
+    align-items: flex-start; 
+}
+
+/* Immagine profilo */
+.user-profile-picture {
+    width: 35px;
+    height: 35px;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 2px solid #fff; 
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+
+.onit-page-menu-user {
+    position: absolute;
+    top: 8px;
+    right: 16px;
+    display: flex;
+    align-items: flex-start;
+    margin: 0;
+    padding: 0;
+}
+
+.user-profile-picture {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #fff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+/* Posizionamento foto profilo */
+.profile-menu {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    z-index: 1050; 
+}
+
+.user-profile-picture {
+    width: 35px;
+    height: 35px;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Dropdown menu pulito */
+.profile-menu .dropdown-menu {
+    min-width: 250px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+/* Container navbar deve essere relativo */
+.navbar {
+    position: relative;
+}
+
+/* Posiziona la foto profilo in alto a destra */
+.user-profile-picture {
+    position: absolute;
+    top: 10px; 
+    right: 16px; 
+    width: 35px;
+    height: 35px;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    z-index: 1100; 
+}
+
+
+.profile-dropdown {
+    position: absolute;
+    top: 50px;
+    right: 0;
+}
+
+/* ---------- LOGIN FORM ---------- */
+.onit-page .container {
+    display: flex;
+    justify-content: center;  
+    align-items: center;      
+    min-height: calc(100vh - 70px); 
+    padding: 20px;
+    background: var(--onit-bg); 
+     
+}
+
+.onit-page form {
+    width: 100%;
+    border-radius: 14px;
+    max-width: 400px;        
+    background:#e6e1e7;
+    padding: 32px 24px;
+    box-shadow: 0 6px 20px rgba(0,0,0,.1); 
+}
+
+.onit-page .form-group {
+    margin-bottom: 16px;
+}
+
+.onit-page .btn-primary {
+    width: 100%;              
+    padding: 12px;
+    font-weight: 600;
+}
+
+@media (max-width: 576px) {
+    .onit-page form {
+        padding: 24px 16px;
+        max-width: 100%;
+    }
+}
+
+.onit-toolbar h3 {
+    white-space: nowrap; /* forza tutto su una riga */
+    overflow: hidden;
+    text-overflow: ellipsis; /* tronca con ... se troppo lungo */
+}
+
+.onit-toolbar button {
+    flex-shrink: 0; /* impedisce al pulsante di ridursi */
+}
