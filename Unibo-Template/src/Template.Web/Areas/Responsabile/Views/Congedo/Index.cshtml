@@ -258,6 +258,17 @@
 }
 
 @section scripts {
+
+    <!-- FullCalendar Core -->
+    <script src="~/lib/fullcalendar/core/index.global.min.js"></script>
+    
+    <!-- Plugin DayGrid (necessario per vista mensile) -->
+    <script src="~/lib/fullcalendar/daygrid/index.global.min.js"></script>
+    
+    <!-- Plugin Interaction (opzionale, per drag & drop) -->
+    <script src="~/lib/fullcalendar/interaction/index.global.min.js"></script>
+
+    
 <script>
 (function() {
     var tipoCorrente = 'Ferie';
@@ -425,7 +436,7 @@
     function inizializzaCalendarioAziendale() {
         var el = document.getElementById('calendarioAziendale');
         calendarAziendale = new FullCalendar.Calendar(el, {
-            initialView: 'month',
+            initialView: 'dayGridMonth',
             locale: 'it',
             headerToolbar: {
                 left: 'prev,next today',
@@ -457,7 +468,7 @@
     function inizializzaCalendarioMio() {
         var el = document.getElementById('calendarioMio');
         calendarMio = new FullCalendar.Calendar(el, {
-            initialView: 'month',
+            initialView: 'dayGridMonth',
             locale: 'it',
             headerToolbar: {
                 left: 'prev,next today',
