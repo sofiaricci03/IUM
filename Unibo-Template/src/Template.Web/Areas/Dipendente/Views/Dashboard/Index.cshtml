@@ -267,6 +267,22 @@
             z-index: 3;
         }
         
+        /* Evidenzia weekend in grigio chiaro */
+        .fc-day.weekend-day {
+            background-color: #f8f9fa !important;
+        }
+        
+        /* Colore leggermente più scuro per le celle header del weekend */
+        .fc-col-header-cell.fc-day-sat,
+        .fc-col-header-cell.fc-day-sun {
+            background-color: #e9ecef !important;
+        }
+        
+        /* Mantieni il giorno corrente visibile anche se cade nel weekend */
+        .fc-daygrid-day.fc-day-today.weekend-day {
+            background-color: #fff3cd !important;
+        }
+        
         /* Modale migliorata */
         .onit-label-required::after {
             content: " *";

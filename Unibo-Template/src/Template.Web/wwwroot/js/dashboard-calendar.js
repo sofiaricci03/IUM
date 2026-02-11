@@ -350,11 +350,26 @@ document.addEventListener("DOMContentLoaded", function () {
     calendar = new FullCalendar.Calendar(calendarEl, {
         initialView: "dayGridMonth",
         locale: "it",
+        firstDay: 1, // Calendario inizia dal lunedì
         selectable: true,
         selectMirror: true,  // Mostra preview durante selezione
         selectOverlap: false, // Non sovrapporre eventi esistenti
         height: 650,
         headerToolbar: false,
+        
+        // Applica classi CSS personalizzate ai giorni del weekend
+        // FullCalendar chiama questa funzione per ogni cella del calendario, 
+        // permettendo di aggiungere classi CSS personalizzate in base al giorno della settimana
+        dayCellClassNames: function(arg) {  
+            const dayOfWeek = arg.date.getDay();
+            if (dayOfWeek === 6) { // Sabato
+                return ['weekend-day', 'sabato'];
+            }
+            if (dayOfWeek === 0) { // Domenica
+                return ['weekend-day', 'domenica'];
+            }
+            return [];
+        },
         
         eventTimeFormat: {
             hour: '2-digit',
