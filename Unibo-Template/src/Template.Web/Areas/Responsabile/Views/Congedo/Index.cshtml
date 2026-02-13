@@ -254,6 +254,22 @@
     .fc .fc-event { border-radius: 4px; font-size: 0.8rem; padding: 2px 6px; cursor: pointer; }
     .fc-event-attesa { background-color: rgba(255,193,7,0.5) !important; border-color: #ffc107 !important; color: #856404 !important; }
     .fc-event-approvato { background-color: #28a745 !important; border-color: #28a745 !important; color: #fff !important; }
+    
+    /* Evidenzia weekend in grigio chiaro */
+    .fc-day.weekend-day {
+        background-color: #f8f9fa !important;
+    }
+    
+    /* Colore leggermente più scuro per le celle header del weekend */
+    .fc-col-header-cell.fc-day-sat,
+    .fc-col-header-cell.fc-day-sun {
+        background-color: #e9ecef !important;
+    }
+    
+    /* Mantieni il giorno corrente visibile anche se cade nel weekend */
+    .fc-daygrid-day.fc-day-today.weekend-day {
+        background-color: #fff3cd !important;
+    }
 </style>
 }
 
@@ -427,10 +443,17 @@
         calendarAziendale = new FullCalendar.Calendar(el, {
             initialView: 'month',
             locale: 'it',
+            firstDay: 1, // Inizia dal lunedì
             headerToolbar: {
                 left: 'prev,next today',
                 center: 'title',
                 right: 'month,week'
+            },
+            dayCellClassNames: function(arg) {
+                var dayOfWeek = arg.date.getDay();
+                if (dayOfWeek === 6) return ['weekend-day', 'sabato'];
+                if (dayOfWeek === 0) return ['weekend-day', 'domenica'];
+                return [];
             },
             events: function(info, successCallback, failureCallback) {
                 fetch('/Responsabile/CongedoApi/GetFerieTutti')
@@ -459,10 +482,17 @@
         calendarMio = new FullCalendar.Calendar(el, {
             initialView: 'month',
             locale: 'it',
+            firstDay: 1, // Inizia dal lunedì
             headerToolbar: {
                 left: 'prev,next today',
                 center: 'title',
                 right: 'month,week'
+            },
+            dayCellClassNames: function(arg) {
+                var dayOfWeek = arg.date.getDay();
+                if (dayOfWeek === 6) return ['weekend-day', 'sabato'];
+                if (dayOfWeek === 0) return ['weekend-day', 'domenica'];
+                return [];
             },
             events: function(info, successCallback, failureCallback) {
                 fetch('/Responsabile/CongedoApi/GetMieFerie')
