@@ -1,27 +1,16 @@
 // =============================================================
-//  FullCalendar + Popup attività + API reali - VERSIONE DINAMICA
+//  FullCalendar + Pallini Rendicontazione - VERSIONE COMPLETA
 // =============================================================
 
 let calendar;
+let statoGiorni = {};
+let currentYear = new Date().getFullYear();
+let currentMonth = new Date().getMonth() + 1;
 
-// Detect current area (Dipendente or Responsabile)
-const currentArea = window.CURRENT_AREA || (window.location.pathname.includes('/Responsabile/') ? 'Responsabile' : 'Dipendente');
-console.log(' Area detected:', currentArea); // Debug
-
-// ----------------------
-//  FUNZIONE: Arrotonda a 15 minuti
-// ----------------------
-function roundToQuarter(time) {
-    if (!time) return '';
-    const [hours, minutes] = time.split(':');
-    const roundedMinutes = Math.round(parseInt(minutes) / 15) * 15;
-    const finalMinutes = roundedMinutes === 60 ? 0 : roundedMinutes;
-    const finalHours = roundedMinutes === 60 ? (parseInt(hours) + 1) % 24 : parseInt(hours);
-    return `${String(finalHours).padStart(2, '0')}:${String(finalMinutes).padStart(2, '0')}`;
-}
+const currentArea = window.CURRENT_AREA || 'Dipendente';
 
 // ----------------------
-//  FUNZIONE: Calcola durata in ore
+//  UTILITY FUNCTIONS
 // ----------------------
 function calcolaDurata(start, end) {
     if (!start || !end) return 0;
@@ -31,14 +20,8 @@ function calcolaDurata(start, end) {
     return (minuti / 60).toFixed(2);
 }
 
-// ----------------------
-//  FUNZIONE: Colore per progetto
-// ----------------------
 function getColorForProject(projectName) {
-    const colors = [
-        '#3788d8', '#28a745', '#fd7e14', '#6f42c1', 
-        '#e83e8c', '#20c997', '#17a2b8', '#ffc107'
-    ];
+    const colors = ['#3788d8', '#28a745', '#fd7e14', '#6f42c1', '#e83e8c', '#20c997', '#17a2b8', '#ffc107'];
     let hash = 0;
     for (let i = 0; i < projectName.length; i++) {
         hash = projectName.charCodeAt(i) + ((hash << 5) - hash);
@@ -46,53 +29,154 @@ function getColorForProject(projectName) {
     return colors[Math.abs(hash) % colors.length];
 }
 
-// ----------------------
-//  FUNZIONE UTILE: format orari senza UTC
-// ----------------------
 function formatTimeLocal(date) {
     return date.toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit", hour12: false });
 }
 
-// ----------------------
-//  AGGIORNA TITOLO MESE
-// ----------------------
 function aggiornaTitoloCalendario() {
     const titolo = document.getElementById("titleCalendar");
+    if (!titolo) return;
     const data = calendar.getDate();
-
-    const nomeMese = data.toLocaleDateString("it-IT", {
-        month: "long",
-        year: "numeric"
-    });
-
+    const nomeMese = data.toLocaleDateString("it-IT", { month: "long", year: "numeric" });
     titolo.textContent = nomeMese.charAt(0).toUpperCase() + nomeMese.slice(1);
+}
+
+// ----------------------
+//  RENDICONTAZIONE
+// ----------------------
+async function caricaStatoGiorni() {
+    try {
+        const response = await fetch(`/${currentArea}/CalendarioApi/GetStatoGiorni?anno=${currentYear}&mese=${currentMonth}`);
+        const data = await response.json();
+        
+        statoGiorni = data.statoGiorni || {};
+        
+        const alertRendiconta = document.getElementById('alertRendiconta');
+        if (alertRendiconta) {
+            alertRendiconta.classList.toggle('d-none', !data.mostraRendiconta);
+        }
+
+        const alertStato = document.getElementById('alertStatoRendicontazione');
+        if (alertStato) {
+            if (data.statoRendicontazione === 'Inviata') {
+                alertStato.className = 'alert alert-info mb-3';
+                alertStato.innerHTML = `<i class="fa-solid fa-clock"></i> <strong>Rendicontazione inviata</strong> - In attesa di approvazione${data.dataInvio ? ' il ' + data.dataInvio : ''}`;
+            } else if (data.statoRendicontazione === 'Approvata') {
+                alertStato.className = 'alert alert-success mb-3';
+                alertStato.innerHTML = `<i class="fa-solid fa-circle-check"></i> <strong>Rendicontazione approvata</strong>${data.dataInvio ? ' il ' + data.dataInvio : ''}`;
+            } else if (data.statoRendicontazione === 'Respinta') {
+                alertStato.className = 'alert alert-danger mb-3';
+                let msg = '<i class="fa-solid fa-circle-xmark"></i> <strong>Rendicontazione respinta</strong>';
+                if (data.noteResponsabile) msg += `<br><small>Motivazione: ${data.noteResponsabile}</small>`;
+                alertStato.innerHTML = msg;
+            } else {
+                alertStato.classList.add('d-none');
+            }
+        }
+
+        setTimeout(() => aggiungiPalliniCalendario(), 100);
+    } catch (error) {
+        console.error('Errore caricamento stato giorni:', error);
+    }
+}
+
+function aggiungiPalliniCalendario() {
+    document.querySelectorAll('.status-indicator').forEach(el => el.remove());
+    
+    Object.keys(statoGiorni).forEach(dataStr => {
+        const stato = statoGiorni[dataStr].stato;
+        const cell = document.querySelector(`[data-date="${dataStr}"]`);
+        if (!cell) return;
+        
+        const indicator = document.createElement('div');
+        indicator.className = `status-indicator status-${stato}`;
+        const tooltips = {
+            'completo': 'Giornata completa (6+ ore)',
+            'parziale': 'Giornata parziale (<6 ore)',
+            'mancante': 'Nessuna attività inserita',
+            'congedo': 'Giorno di congedo'
+        };
+        indicator.title = tooltips[stato] || '';
+        
+        const dayFrame = cell.querySelector('.fc-daygrid-day-frame');
+        if (dayFrame) dayFrame.appendChild(indicator);
+    });
+}
+
+async function inviaRendicontazione() {
+    if (!confirm('Sei sicuro di voler inviare la rendicontazione?\n\nDopo l\'invio non potrai più modificare le attività del mese fino all\'approvazione.')) return;
+
+    try {
+        const response = await fetch('/Dipendente/Rendicontazione/InviaRendicontazione', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: `anno=${currentYear}&mese=${currentMonth}`
+        });
+        const data = await response.json();
+        
+        if (response.ok) {
+            alert('✓ ' + data.message);
+            await caricaStatoGiorni();
+            calendar.refetchEvents();
+        } else {
+            alert('✗ ' + (data.error || 'Errore durante l\'invio'));
+        }
+    } catch (error) {
+        console.error('Errore invio rendicontazione:', error);
+        alert('✗ Errore durante l\'invio della rendicontazione');
+    }
+}
+
+function onAttivitaSalvataConSuccesso() {
+    calendar.removeAllEvents();
+    caricaEventi();
+    caricaStatoGiorni();
 }
 
 // ----------------------
 //  APRI POPUP PER NUOVA ATTIVITÀ
 // ----------------------
 function apriPopupPerData(dateStr) {
-    document.getElementById("oraInizio").value = "09:00";
-    document.getElementById("oraFine").value = "18:00";
-    document.getElementById("progetto").value = "";
-    document.getElementById("cliente").value = "";
-    document.getElementById("attivita").value = "";
-    document.getElementById("descrizione").value = "";
-
-    document.getElementById("checkTrasferta").checked = false;
-    document.getElementById("boxTrasferta").style.display = "none";
-    document.getElementById("spesaTrasporto").value = "";
-    document.getElementById("spesaVitto").value = "";
-    document.getElementById("spesaAlloggio").value = "";
-
-    document.getElementById("btnSalva").removeAttribute("data-id");
-    document.getElementById("btnSalva").setAttribute("data-date", dateStr);
-
-    const lbl = document.getElementById("dataSelezionata");
-    if (lbl) lbl.textContent = new Date(dateStr).toLocaleDateString("it-IT");
-
-    document.getElementById("btnElimina").style.display = "none";
-
+    const oraInizio = document.getElementById("oraInizio");
+    const oraFine = document.getElementById("oraFine");
+    const progetto = document.getElementById("progetto");
+    const descrizione = document.getElementById("descrizione");
+    const checkTrasferta = document.getElementById("checkTrasferta");
+    const boxTrasferta = document.getElementById("boxTrasferta");
+    const spesaTrasporto = document.getElementById("spesaTrasporto");
+    const spesaVitto = document.getElementById("spesaVitto");
+    const spesaAlloggio = document.getElementById("spesaAlloggio");
+    const btnSalva = document.getElementById("btnSalva");
+    const btnElimina = document.getElementById("btnElimina");
+    const dataSelezionata = document.getElementById("dataSelezionata");
+    
+    if (!oraInizio || !oraFine || !progetto) {
+        console.error("Elementi del modale non trovati!");
+        return;
+    }
+    
+    oraInizio.value = "09:00";
+    oraFine.value = "18:00";
+    progetto.value = "";
+    if (descrizione) descrizione.value = "";
+    if (checkTrasferta) checkTrasferta.checked = false;
+    if (boxTrasferta) boxTrasferta.style.display = "none";
+    if (spesaTrasporto) spesaTrasporto.value = "";
+    if (spesaVitto) spesaVitto.value = "";
+    if (spesaAlloggio) spesaAlloggio.value = "";
+    
+    if (btnSalva) {
+        btnSalva.removeAttribute("data-id");
+        btnSalva.setAttribute("data-date-start", dateStr);
+        btnSalva.setAttribute("data-date-end", dateStr);
+    }
+    
+    if (dataSelezionata) {
+        dataSelezionata.textContent = new Date(dateStr + 'T00:00:00').toLocaleDateString("it-IT");
+    }
+    
+    if (btnElimina) btnElimina.style.display = "none";
+    
     new bootstrap.Modal(document.getElementById("modaleOre")).show();
 }
 
@@ -100,80 +184,93 @@ function apriPopupPerData(dateStr) {
 //  APRI POPUP PER RANGE DATE
 // ----------------------
 function apriPopupPerRange(startStr, endStr) {
-    // Calcola giorni nel range (esclude ultimo giorno perché FullCalendar usa exclusive end)
-    const start = new Date(startStr);
-    const end = new Date(endStr);
-    end.setDate(end.getDate() - 1); // Exclusive end → inclusive
-    
-    const giorni = Math.round((end - start) / (1000 * 60 * 60 * 24)) + 1;
-    
-    document.getElementById("oraInizio").value = "09:00";
-    document.getElementById("oraFine").value = "18:00";
-    document.getElementById("progetto").value = "";
-    document.getElementById("cliente").value = "";
-    document.getElementById("attivita").value = "";
-    document.getElementById("descrizione").value = "";
+    const start = new Date(startStr + 'T00:00:00');
+    let end = new Date(endStr + 'T00:00:00');
 
-    document.getElementById("checkTrasferta").checked = false;
-    document.getElementById("boxTrasferta").style.display = "none";
-    document.getElementById("spesaTrasporto").value = "";
-    document.getElementById("spesaVitto").value = "";
-    document.getElementById("spesaAlloggio").value = "";
+    if (end < start) end = new Date(start);
 
-    document.getElementById("btnSalva").removeAttribute("data-id");
-    document.getElementById("btnSalva").setAttribute("data-date-start", startStr);
-    document.getElementById("btnSalva").setAttribute("data-date-end", end.toISOString().split('T')[0]);
-    
-    const lbl = document.getElementById("dataSelezionata");
-    if (lbl) {
-        if (giorni === 1) {
-            lbl.textContent = start.toLocaleDateString("it-IT");
-        } else {
-            lbl.textContent = `${start.toLocaleDateString("it-IT")} → ${end.toLocaleDateString("it-IT")} (${giorni} giorni)`;
-        }
+    const giorni = [];
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+        giorni.push(new Date(d).toISOString().split('T')[0]);
     }
 
-    document.getElementById("btnElimina").style.display = "none";
+    const oraInizio = document.getElementById("oraInizio");
+    const oraFine = document.getElementById("oraFine");
+    const progetto = document.getElementById("progetto");
+    const descrizione = document.getElementById("descrizione");
+    const checkTrasferta = document.getElementById("checkTrasferta");
+    const boxTrasferta = document.getElementById("boxTrasferta");
+    const spesaTrasporto = document.getElementById("spesaTrasporto");
+    const spesaVitto = document.getElementById("spesaVitto");
+    const spesaAlloggio = document.getElementById("spesaAlloggio");
+    const btnSalva = document.getElementById("btnSalva");
+    const btnElimina = document.getElementById("btnElimina");
+    const dataSelezionata = document.getElementById("dataSelezionata");
+
+    if (!oraInizio || !oraFine || !progetto) {
+        console.error("Elementi del modale non trovati!");
+        return;
+    }
+
+    oraInizio.value = "09:00";
+    oraFine.value = "18:00";
+    progetto.value = "";
+    if (descrizione) descrizione.value = "";
+    if (checkTrasferta) checkTrasferta.checked = false;
+    if (boxTrasferta) boxTrasferta.style.display = "none";
+    if (spesaTrasporto) spesaTrasporto.value = "";
+    if (spesaVitto) spesaVitto.value = "";
+    if (spesaAlloggio) spesaAlloggio.value = "";
+
+    if (btnSalva) {
+        btnSalva.removeAttribute("data-id");
+        btnSalva.setAttribute("data-date-start", startStr);
+        btnSalva.setAttribute("data-date-end", end.toISOString().split('T')[0]);
+    }
+
+    if (dataSelezionata) {
+        dataSelezionata.textContent = giorni.length === 1 ? start.toLocaleDateString("it-IT") : 
+            `${start.toLocaleDateString("it-IT")} → ${end.toLocaleDateString("it-IT")} (${giorni.length} giorni)`;
+    }
+
+    if (btnElimina) btnElimina.style.display = "none";
 
     new bootstrap.Modal(document.getElementById("modaleOre")).show();
 }
+
 // ----------------------
-//  SALVA ATTIVITÀ (CREATE/UPDATE)
-// ----------------------
-// ----------------------
-//  SALVA ATTIVITÀ (CREATE/UPDATE)
+//  SALVA/ELIMINA
 // ----------------------
 document.getElementById("btnSalva").addEventListener("click", async function () {
-
     const id = this.getAttribute("data-id");
     const giornoSingolo = this.getAttribute("data-date");
     const dateStart = this.getAttribute("data-date-start");
     const dateEnd = this.getAttribute("data-date-end");
     
-    // Ottieni progettoId dal select
     const progettoSelect = document.getElementById("progetto");
     const progettoId = progettoSelect.value;
-    const progettoNome = progettoSelect.options[progettoSelect.selectedIndex]?.text || "";
+    const selectedOption = progettoSelect.options[progettoSelect.selectedIndex];
+const progettoNome = selectedOption?.getAttribute('data-nome') || "";
+const clienteNome = selectedOption?.getAttribute('data-cliente') || "";
 
-    let dto = {
-        id: id ? parseInt(id) : 0,
-        giorno: giornoSingolo || dateStart,
-        oraInizio: document.getElementById("oraInizio").value,
-        oraFine: document.getElementById("oraFine").value,
-        progettoId: progettoId ? parseInt(progettoId) : 0,
-        progetto: progettoNome,
-        cliente: document.getElementById("cliente").value,
-        attivita: document.getElementById("attivita").value,
-        descrizione: document.getElementById("descrizione").value || "",
-        trasferta: document.getElementById("checkTrasferta").checked,
-        spesaTrasporto: parseFloat(document.getElementById("spesaTrasporto").value) || 0,
-        spesaCibo: parseFloat(document.getElementById("spesaVitto").value) || 0,
-        spesaAlloggio: parseFloat(document.getElementById("spesaAlloggio").value) || 0
-    };
+let dto = {
+    id: id ? parseInt(id) : 0,
+    giorno: giornoSingolo || dateStart,
+    oraInizio: document.getElementById("oraInizio").value,
+    oraFine: document.getElementById("oraFine").value,
+    progettoId: progettoId ? parseInt(progettoId) : 0,
+    progetto: progettoNome,
+    cliente: clienteNome,
+    attivita: "Attività progetto", // ← FISSO
+    descrizione: document.getElementById("descrizione").value || "",
+    trasferta: document.getElementById("checkTrasferta").checked,
+    spesaTrasporto: parseFloat(document.getElementById("spesaTrasporto").value) || 0,
+    spesaCibo: parseFloat(document.getElementById("spesaVitto").value) || 0,
+    spesaAlloggio: parseFloat(document.getElementById("spesaAlloggio").value) || 0
+};
 
-    // Validazione
-    if (!dto.progettoId || !dto.cliente || !dto.attivita) {
-        alert("Compila tutti i campi obbligatori!");
+    if (!dto.progettoId) {
+        alert("Seleziona un progetto!");
         return;
     }
 
@@ -183,23 +280,22 @@ document.getElementById("btnSalva").addEventListener("click", async function () 
         return;
     }
 
-    // Se è un range di date, salva per ogni giorno
+    // Range di date
     if (!id && dateStart && dateEnd) {
         const start = new Date(dateStart);
         const end = new Date(dateEnd);
         const giorni = [];
         
-        // Genera array di date
         for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
             giorni.push(new Date(d).toISOString().split('T')[0]);
         }
         
-        // Salva su ogni giorno
         let successCount = 0;
         let errorMessages = [];
         
         for (const giorno of giorni) {
             dto.giorno = giorno;
+                console.log("DTO singolo:", dto);
             
             try {
                 const res = await fetch(`/${currentArea}/CalendarioApi/AddAttivita`, {
@@ -209,42 +305,30 @@ document.getElementById("btnSalva").addEventListener("click", async function () 
                 });
                 
                 const data = await res.json();
-                
-                if (res.ok) {
-                    successCount++;
-                } else {
-                    errorMessages.push(`${giorno}: ${data.error}`);
-                }
+                if (res.ok) successCount++;
+                else errorMessages.push(`${giorno}: ${data.error}`);
             } catch (error) {
                 errorMessages.push(`${giorno}: Errore di connessione`);
             }
         }
         
-        const modal = bootstrap.Modal.getInstance(document.getElementById("modaleOre"));
-        modal.hide();
-        
-        // Rimuovi backdrop e classi residue
+        bootstrap.Modal.getInstance(document.getElementById("modaleOre")).hide();
         document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
         document.body.classList.remove('modal-open');
         document.body.style.overflow = '';
-        document.body.style.paddingRight = '';
         
-        calendar.removeAllEvents();
-        caricaEventi();
+        onAttivitaSalvataConSuccesso();
         
         if (errorMessages.length > 0) {
             alert(`Salvate ${successCount}/${giorni.length} attività.\n\nErrori:\n${errorMessages.join('\n')}`);
         } else {
             alert(`${successCount} attività salvate con successo!`);
         }
-        
         return;
     }
 
-    // Salvataggio singolo (create o update)
-    const url = id
-        ? `/${currentArea}/CalendarioApi/UpdateAttivita`
-        : `/${currentArea}/CalendarioApi/AddAttivita`;
+    // Salvataggio singolo
+    const url = id ? `/${currentArea}/CalendarioApi/UpdateAttivita` : `/${currentArea}/CalendarioApi/AddAttivita`;
 
     try {
         const res = await fetch(url, {
@@ -256,18 +340,11 @@ document.getElementById("btnSalva").addEventListener("click", async function () 
         const data = await res.json();
 
         if (res.ok) {
-            const modal = bootstrap.Modal.getInstance(document.getElementById("modaleOre"));
-            modal.hide();
-            
-            // Rimuovi backdrop e classi residue
+            bootstrap.Modal.getInstance(document.getElementById("modaleOre")).hide();
             document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
             document.body.classList.remove('modal-open');
             document.body.style.overflow = '';
-            document.body.style.paddingRight = '';
-
-            calendar.removeAllEvents();
-            caricaEventi();
-            
+            onAttivitaSalvataConSuccesso();
             alert(data.message || "Attività salvata!");
         } else {
             alert(data.error || "Errore nel salvataggio");
@@ -278,14 +355,9 @@ document.getElementById("btnSalva").addEventListener("click", async function () 
     }
 });
 
-// ----------------------
-//  ELIMINA ATTIVITÀ
-// ----------------------
 document.getElementById("btnElimina").addEventListener("click", async function () {
-
     const id = this.getAttribute("data-id");
     if (!id) return;
-
     if (!confirm("Vuoi davvero eliminare questa attività?")) return;
 
     const res = await fetch(`/${currentArea}/CalendarioApi/DeleteAttivita`, {
@@ -295,22 +367,16 @@ document.getElementById("btnElimina").addEventListener("click", async function (
     });
 
     if (res.ok) {
-        const modal = bootstrap.Modal.getInstance(document.getElementById("modaleOre"));
-        modal.hide();
-        
-        // Rimuovi backdrop e classi residue
+        bootstrap.Modal.getInstance(document.getElementById("modaleOre")).hide();
         document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
         document.body.classList.remove('modal-open');
         document.body.style.overflow = '';
-        document.body.style.paddingRight = '';
-        
-        calendar.removeAllEvents();
-        caricaEventi();
+        onAttivitaSalvataConSuccesso();
     }
 });
 
 // ----------------------
-//  CARICA EVENTI NEL CALENDARIO
+//  CARICA EVENTI
 // ----------------------
 function caricaEventi() {
     fetch(`/${currentArea}/CalendarioApi/GetAttivita`)
@@ -341,74 +407,47 @@ function caricaEventi() {
 }
 
 // ----------------------
-//  INIZIALIZZAZIONE CALENDARIO
+//  INIZIALIZZAZIONE
 // ----------------------
 document.addEventListener("DOMContentLoaded", function () {
-
     const calendarEl = document.getElementById("calendar");
 
     calendar = new FullCalendar.Calendar(calendarEl, {
         initialView: "dayGridMonth",
         locale: "it",
-        firstDay: 1, // Calendario inizia dal lunedì
+        firstDay: 1,
         selectable: true,
-        selectMirror: true,  // Mostra preview durante selezione
-        selectOverlap: false, // Non sovrapporre eventi esistenti
+        selectMirror: true,
+        selectOverlap: false,
         height: 650,
         headerToolbar: false,
         
-        // Applica classi CSS personalizzate ai giorni del weekend
-        // FullCalendar chiama questa funzione per ogni cella del calendario, 
-        // permettendo di aggiungere classi CSS personalizzate in base al giorno della settimana
         dayCellClassNames: function(arg) {  
             const dayOfWeek = arg.date.getDay();
-            if (dayOfWeek === 6) { // Sabato
-                return ['weekend-day', 'sabato'];
-            }
-            if (dayOfWeek === 0) { // Domenica
-                return ['weekend-day', 'domenica'];
-            }
+            if (dayOfWeek === 6) return ['weekend-day', 'sabato'];
+            if (dayOfWeek === 0) return ['weekend-day', 'domenica'];
             return [];
         },
         
-        eventTimeFormat: {
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: false
+        eventTimeFormat: { hour: '2-digit', minute: '2-digit', hour12: false },
+        
+        select: function(info) {
+            apriPopupPerRange(info.startStr, info.endStr);
+            calendar.unselect();
         },
-
-    select: function(info) {
-    // Selezione range di date
-    apriPopupPerRange(info.startStr, info.endStr);
-    calendar.unselect(); // Deseleziona dopo apertura modale
-    },
-
-    dateClick: info => apriPopupPerData(info.dateStr),
-
+        
+        dateClick: info => apriPopupPerData(info.dateStr),
+        
         eventClick: function (info) {
-
             const ev = info.event;
-
             const start = ev.start;
             const end = ev.end ?? new Date(start.getTime() + 60 * 60 * 1000);
 
-            // Popola orari
             document.getElementById("oraInizio").value = formatTimeLocal(start);
             document.getElementById("oraFine").value = formatTimeLocal(end);
-
-            // Popola progetto (usa ID, non nome)
-            const progettoId = ev.extendedProps.progettoId || 0;
-            document.getElementById("progetto").value = progettoId;
-            
-            // Trigger change per auto-compilare cliente
-            const event = new Event('change');
-            document.getElementById("progetto").dispatchEvent(event);
-
-            // Popola altri campi
-            document.getElementById("attivita").value = ev.extendedProps.attivita || "";
+            document.getElementById("progetto").value = ev.extendedProps.progettoId || 0;
             document.getElementById("descrizione").value = ev.extendedProps.descrizione || "";
 
-            // Trasferta
             const trasferta = ev.extendedProps.trasferta || false;
             document.getElementById("checkTrasferta").checked = trasferta;
             document.getElementById("boxTrasferta").style.display = trasferta ? "block" : "none";
@@ -419,21 +458,25 @@ document.addEventListener("DOMContentLoaded", function () {
                 document.getElementById("spesaAlloggio").value = ev.extendedProps.spesaAlloggio || 0;
             }
 
-            // Imposta ID per modifica
             document.getElementById("btnSalva").setAttribute("data-id", ev.id);
             document.getElementById("btnSalva").setAttribute("data-date", start.toISOString().substring(0, 10));
-
-            const btnElimina = document.getElementById("btnElimina");
-            btnElimina.style.display = "inline-block";
-            btnElimina.setAttribute("data-id", ev.id);
-
-            const lbl = document.getElementById("dataSelezionata");
-            if (lbl) lbl.textContent = start.toLocaleDateString("it-IT");
+            document.getElementById("btnElimina").style.display = "inline-block";
+            document.getElementById("btnElimina").setAttribute("data-id", ev.id);
+            document.getElementById("dataSelezionata").textContent = start.toLocaleDateString("it-IT");
 
             new bootstrap.Modal(document.getElementById("modaleOre")).show();
         },
         
-        // Totale ore per giorno
+        datesSet: function(info) {
+            currentYear = info.view.currentStart.getFullYear();
+            currentMonth = info.view.currentStart.getMonth() + 1;
+            caricaStatoGiorni();
+        },
+        
+        viewDidMount: function() {
+            setTimeout(() => aggiungiPalliniCalendario(), 100);
+        },
+        
         dayCellDidMount: function(info) {
             const dateStr = info.date.toISOString().split('T')[0];
             const events = calendar.getEvents().filter(e => 
@@ -443,50 +486,57 @@ document.addEventListener("DOMContentLoaded", function () {
             if (events.length > 0) {
                 let totalMinutes = 0;
                 events.forEach(e => {
-                    if (e.start && e.end) {
-                        totalMinutes += (e.end - e.start) / (1000 * 60);
-                    }
+                    if (e.start && e.end) totalMinutes += (e.end - e.start) / (1000 * 60);
                 });
                 const hours = (totalMinutes / 60).toFixed(1);
                 
                 const badge = document.createElement('div');
                 badge.className = 'day-total-hours';
                 badge.textContent = `${hours}h`;
-                badge.style.cssText = `
-                    position: absolute;
-                    bottom: 2px;
-                    right: 2px;
-                    background: ${hours >= 6 ? '#28a745' : '#ffc107'};
-                    color: white;
-                    padding: 2px 6px;
-                    border-radius: 10px;
-                    font-size: 0.7rem;
-                    font-weight: 600;
-                `;
+                badge.style.cssText = `position:absolute;bottom:2px;right:2px;background:${hours >= 6 ? '#28a745' : '#ffc107'};color:white;padding:2px 6px;border-radius:10px;font-size:0.7rem;font-weight:600;z-index:3;`;
                 info.el.style.position = 'relative';
                 info.el.appendChild(badge);
             }
+        },
+        
+        eventDidMount: function() {
+            setTimeout(() => aggiungiPalliniCalendario(), 50);
         }
     });
 
     calendar.render();
     aggiornaTitoloCalendario();
-
-    // Carica eventi iniziali
     caricaEventi();
+    
+    const btnRendiconta = document.getElementById('btnRendiconta');
+    if (btnRendiconta) btnRendiconta.addEventListener('click', inviaRendicontazione);
+    
+    caricaStatoGiorni();
+    // ========================================
+    // FIX: Rimuovi backdrop quando modale si chiude
+    // ========================================
+    const modaleOre = document.getElementById('modaleOre');
+    if (modaleOre) {
+        modaleOre.addEventListener('hidden.bs.modal', function() {
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+        });
+    }
 
-    // Navigazione
-    document.getElementById("prevBtn").addEventListener("click", () => {
-        calendar.prev();
-        aggiornaTitoloCalendario();
+    document.getElementById("prevBtn").addEventListener("click", () => { 
+        calendar.prev(); 
+        aggiornaTitoloCalendario(); 
     });
+    
 
-    document.getElementById("nextBtn").addEventListener("click", () => {
-        calendar.next();
-        aggiornaTitoloCalendario();
-    });
-
-    // Cambio vista
+    document.getElementById("prevBtn").addEventListener("click", () => { calendar.prev(); aggiornaTitoloCalendario(); });
+    document.getElementById("nextBtn").addEventListener("click", () => { calendar.next(); aggiornaTitoloCalendario(); });
     document.getElementById("btnSettimana").addEventListener("click", () => calendar.changeView("timeGridWeek"));
     document.getElementById("btnMese").addEventListener("click", () => calendar.changeView("dayGridMonth"));
+    
+    document.getElementById("checkTrasferta").addEventListener("change", function() {
+        document.getElementById("boxTrasferta").style.display = this.checked ? "block" : "none";
+    });
 });

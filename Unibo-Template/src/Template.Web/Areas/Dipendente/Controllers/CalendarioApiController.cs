@@ -104,16 +104,13 @@ namespace Template.Web.Areas.Dipendente.Controllers
             if (!TimeSpan.TryParse(dto.oraFine, out var oraFine))
                 return BadRequest(new { error = "Ora fine non valida" });
 
-            // Ora fine > ora inizio
             if (oraFine <= oraInizio)
                 return BadRequest(new { error = "L'orario di fine deve essere successivo all'orario di inizio" });
 
-            //  Max 12 ore singola attività
             var durataOre = (oraFine - oraInizio).TotalHours;
             if (durataOre > 12)
                 return BadRequest(new { error = "Non puoi inserire più di 12 ore in una singola attività" });
 
-            //  Verifica progetto assegnato
             var progettoId = dto.progettoId;
             var assegnato = _ctx.AssegnazioniDipendentiProgetti
                 .Any(a => a.DipendenteId == dip.Id && a.ProgettoId == progettoId && a.Attivo);
@@ -121,7 +118,6 @@ namespace Template.Web.Areas.Dipendente.Controllers
             if (!assegnato)
                 return BadRequest(new { error = "Non sei assegnato a questo progetto" });
 
-            //  Progetto non completato
             var progetto = _ctx.Progetti.Find(progettoId);
             if (progetto == null)
                 return BadRequest(new { error = "Progetto non trovato" });
@@ -129,11 +125,9 @@ namespace Template.Web.Areas.Dipendente.Controllers
             if (progetto.Completato)
                 return BadRequest(new { error = "Non puoi rendicontare su un progetto completato" });
 
-            //  Data dentro periodo progetto
             if (giorno.Date < progetto.DataInizio.Date)
                 return BadRequest(new { error = $"Non puoi rendicontare prima della data inizio progetto ({progetto.DataInizio:dd/MM/yyyy})" });
 
-            // Nessuna sovrapposizione oraria
             var sovrapposizioni = _ctx.AttivitaLavorative
                 .Where(a => a.DipendenteId == dip.Id && a.Giorno.Date == giorno.Date)
                 .AsEnumerable()
@@ -146,7 +140,6 @@ namespace Template.Web.Areas.Dipendente.Controllers
             if (sovrapposizioni.Any())
                 return BadRequest(new { error = "Esiste già un'attività in questo orario" });
 
-            // Totale ore giornaliere <= 12
             var oreTotaliGiorno = _ctx.AttivitaLavorative
                 .Where(a => a.DipendenteId == dip.Id && a.Giorno.Date == giorno.Date)
                 .AsEnumerable()
@@ -155,7 +148,6 @@ namespace Template.Web.Areas.Dipendente.Controllers
             if (oreTotaliGiorno + durataOre > 12)
                 return BadRequest(new { error = $"Superato limite 12 ore/giorno. Hai già {oreTotaliGiorno:F1}h inserite" });
 
-            // Verifica se rendicontazione del mese è già stata inviata
             var rendicontazione = _ctx.RendicontazioniMensili
                 .FirstOrDefault(r => r.DipendenteId == dip.Id && 
                                     r.Anno == giorno.Year && 
@@ -172,9 +164,9 @@ namespace Template.Web.Areas.Dipendente.Controllers
                 Giorno = giorno,
                 OraInizio = oraInizio,
                 OraFine = oraFine,
-                ProgettoNome = dto.progetto,
-                Cliente = dto.cliente,
-                Attivita = dto.attivita,
+                ProgettoNome = progetto.Nome,
+                Cliente = progetto.Cliente,
+                Attivita = string.IsNullOrWhiteSpace(dto.attivita) ? "Attività progetto" : dto.attivita,
                 Descrizione = dto.descrizione ?? "",
                 Trasferta = dto.trasferta,
                 SpesaTrasporto = dto.spesaTrasporto,
@@ -316,6 +308,100 @@ namespace Template.Web.Areas.Dipendente.Controllers
 
             return Ok(progettiAssegnati);
         }
+
+        // ==========================
+// GET stato giorni del mese per pallini colorati
+// ==========================
+    [HttpGet]
+    public virtual async Task<IActionResult> GetStatoGiorni(int anno, int mese)
+    {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var dip = await _ctx.Dipendenti.FirstOrDefaultAsync(d => d.UserId.ToString() == userId);
+        
+        if (dip == null) return Unauthorized();
+
+        var primoGiorno = new DateTime(anno, mese, 1);
+        var ultimoGiorno = primoGiorno.AddMonths(1).AddDays(-1);
+
+        // Recupera attività del mese
+        var attivita = await _ctx.AttivitaLavorative
+            .Where(a => a.DipendenteId == dip.Id && 
+                    a.Giorno >= primoGiorno && 
+                    a.Giorno <= ultimoGiorno)
+            .ToListAsync();
+
+        // Recupera ferie/permessi approvati del mese
+        var congedi = await _ctx.RichiestaFerie
+            .Where(r => r.DipendenteId == dip.Id &&
+                    r.Stato == FerieStato.Approvato &&
+                    ((r.DataInizio <= ultimoGiorno && r.DataFine >= primoGiorno)))
+            .ToListAsync();
+
+        // Recupera stato rendicontazione
+        var rendicontazione = await _ctx.RendicontazioniMensili
+            .FirstOrDefaultAsync(r => r.DipendenteId == dip.Id && r.Anno == anno && r.Mese == mese);
+
+        var statoGiorni = new System.Collections.Generic.Dictionary<string, object>();
+        int giorniCompleti = 0;
+        int totaleGiorniLavorativi = 0;
+
+        for (var data = primoGiorno; data <= ultimoGiorno; data = data.AddDays(1))
+        {
+            // Salta weekend
+            if (data.DayOfWeek == DayOfWeek.Saturday || data.DayOfWeek == DayOfWeek.Sunday)
+                continue;
+
+            totaleGiorniLavorativi++;
+            
+            var attivitaGiorno = attivita.Where(a => a.Giorno.Date == data.Date).ToList();
+            var inCongedo = congedi.Any(c => data.Date >= c.DataInizio.Date && data.Date <= c.DataFine.Date);
+
+            string stato;
+            
+            if (inCongedo)
+            {
+                stato = "congedo";
+                giorniCompleti++; // Congedo conta come completo
+            }
+            else if (attivitaGiorno.Any())
+            {
+                var oreTotali = attivitaGiorno.Sum(a => (a.OraFine - a.OraInizio).TotalHours);
+                
+                if (oreTotali >= 6) // Soglia giornata completa
+                {
+                    stato = "completo";
+                    giorniCompleti++;
+                }
+                else
+                {
+                    stato = "parziale";
+                }
+            }
+            else
+            {
+                stato = "mancante";
+            }
+
+            statoGiorni[data.ToString("yyyy-MM-dd")] = new { stato };
+        }
+
+        // Mostra pulsante "Rendiconta" solo se:
+        // 1. Tutti i giorni lavorativi sono completi
+        // 2. La rendicontazione non è già stata inviata/approvata
+        bool tuttoCompleto = giorniCompleti == totaleGiorniLavorativi && totaleGiorniLavorativi > 0;
+        bool giaPresentata = rendicontazione?.Stato == RendicontazioneStato.Inviata || 
+                            rendicontazione?.Stato == RendicontazioneStato.Approvata;
+
+        return Ok(new { 
+            statoGiorni,
+            mostraRendiconta = tuttoCompleto && !giaPresentata,
+            statoRendicontazione = rendicontazione?.Stato.ToString(),
+            totaleGiorniLavorativi,
+            giorniCompleti,
+            dataInvio = rendicontazione?.DataInvio?.ToString("dd/MM/yyyy"),
+            noteResponsabile = rendicontazione?.NoteResponsabile
+        });
+    }
     }
 
     // ==========================
