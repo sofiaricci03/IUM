@@ -580,6 +580,32 @@
         document.getElementById('btnPrevMonth').addEventListener('click', function() {
             meseCorrenteGriglia.setMonth(meseCorrenteGriglia.getMonth() - 1);
             generaGriglia();
+
+        var el = document.getElementById('calendarioAziendale');
+        calendarAziendale = new FullCalendar.Calendar(el, {
+            initialView: 'dayGridMonth',
+            locale: 'it',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'month,week'
+            },
+            events: function(info, successCallback, failureCallback) {
+                fetch('/Responsabile/CongedoApi/GetFerieTutti')
+                    .then(function(res) { return res.json(); })
+                    .then(function(data) { successCallback(data); })
+                    .catch(function(err) { failureCallback(err); });
+            },
+            eventDidMount: function(info) {
+                var stato = info.event.extendedProps.stato;
+                if (stato === 'InAttesa') info.el.classList.add('fc-event-attesa');
+                else if (stato === 'Approvato') info.el.classList.add('fc-event-approvato');
+            },
+            eventClick: function(info) {
+                var p = info.event.extendedProps;
+                alert('Dipendente: ' + p.dipendente + '\nTipo: ' + p.tipo + '\nStato: ' + p.stato + '\nMotivo: ' + (p.motivo || 'N/A'));
+            }
+>>>>>>> diana-feature
         });
         
         document.getElementById('btnNextMonth').addEventListener('click', function() {
@@ -734,7 +760,7 @@
     function inizializzaCalendarioMio() {
         var el = document.getElementById('calendarioMio');
         calendarMio = new FullCalendar.Calendar(el, {
-            initialView: 'month',
+            initialView: 'dayGridMonth',
             locale: 'it',
             firstDay: 1, // Inizia dal lunedì
             headerToolbar: {
