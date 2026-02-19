@@ -79,9 +79,11 @@ document.addEventListener("DOMContentLoaded", function () {
             document.getElementById("dataInizioFerie").value = selectedStart;
             document.getElementById("dataFineFerie").value = selectedEnd;
             
-            // Mostra/nascondi data fine per permesso
+            // Mostra/nascondi data fine in base al tipo
             if (ev.extendedProps.tipo === "Permesso") {
                 document.getElementById("dataFineContainer").style.display = "none";
+            } else {
+                document.getElementById("dataFineContainer").style.display = "block";
             }
 
             aggiornaPeriodo();
@@ -135,23 +137,17 @@ document.addEventListener("DOMContentLoaded", function () {
                 return;
             }
             
-            // Applica colori in base allo stato (0=InAttesa, 1=Approvato)
-            if (stato === 0) { // InAttesa
+            // Applica colori in base al tipo
+            if (stato === 0 || stato === 1) { // InAttesa o Approvato
                 if (tipo === 'Ferie') {
-                    info.el.style.backgroundColor = '#dc3545'; // Rosso per ferie in attesa
-                    info.el.style.borderColor = '#dc3545';
+                    info.el.style.backgroundColor = '#66BB6A'; // Verde per ferie
+                    info.el.style.borderColor = '#66BB6A';
                 } else if (tipo === 'Permesso') {
-                    info.el.style.backgroundColor = '#fd7e14'; // Arancione per permesso in attesa
-                    info.el.style.borderColor = '#fd7e14';
-                }
-                info.el.style.color = '#fff';
-            } else if (stato === 1) { // Approvato
-                if (tipo === 'Ferie') {
-                    info.el.style.backgroundColor = '#dc3545'; // Rosso anche per ferie approvate
-                    info.el.style.borderColor = '#dc3545';
-                } else if (tipo === 'Permesso') {
-                    info.el.style.backgroundColor = '#fd7e14'; // Arancione anche per permesso approvato
-                    info.el.style.borderColor = '#fd7e14';
+                    info.el.style.backgroundColor = '#ffc107'; // Giallo per permesso
+                    info.el.style.borderColor = '#ffc107';
+                } else if (tipo === 'Malattia') {
+                    info.el.style.backgroundColor = '#EF5350'; // Rosso per malattia
+                    info.el.style.borderColor = '#EF5350';
                 }
                 info.el.style.color = '#fff';
             }
@@ -177,7 +173,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 document.getElementById("dataFineFerie").value = dataInizio;
                 aggiornaPeriodo();
             }
-        } else {
+        } else if (tipo === "Ferie" || tipo === "Malattia") {
             dataFineContainer.style.display = "block";
         }
     });

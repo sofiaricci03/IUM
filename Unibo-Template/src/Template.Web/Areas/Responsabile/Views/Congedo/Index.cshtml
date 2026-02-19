@@ -94,19 +94,48 @@
 
                 <!-- TAB 2: CALENDARIO AZIENDALE -->
                 <div class="tab-pane fade" id="calendario" role="tabpanel">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h3 class="fw-bold mb-0">Calendario aziendale</h3>
-                        <div class="d-flex gap-3">
-                            <span class="badge-legenda badge-attesa">
-                                <i class="fa-solid fa-clock"></i> In attesa
-                            </span>
-                            <span class="badge-legenda badge-approvato">
-                                <i class="fa-solid fa-circle-check"></i> Approvato
-                            </span>
+                    <div class="onit-card p-4">
+                        <!-- Header con navigazione -->
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div class="d-flex align-items-center gap-2">
+                                <button class="btn btn-sm btn-outline-secondary" id="btnPrevMonth">
+                                    <i class="fa-solid fa-chevron-left"></i>
+                                </button>
+                                <h4 class="mb-0 fw-bold" id="meseCorrente">Gennaio 2026</h4>
+                                <button class="btn btn-sm btn-outline-secondary" id="btnNextMonth">
+                                    <i class="fa-solid fa-chevron-right"></i>
+                                </button>
+                            </div>
+                            <div class="d-flex gap-3 align-items-center">
+                                <span class="d-flex align-items-center gap-1">
+                                    <span class="legenda-box" style="background-color: #28a745;"></span>
+                                    <small>Ferie</small>
+                                </span>
+                                <span class="d-flex align-items-center gap-1">
+                                    <span class="legenda-box" style="background-color: #ffc107;"></span>
+                                    <small>Permesso</small>
+                                </span>
+                                <span class="d-flex align-items-center gap-1">
+                                    <span class="legenda-box" style="background-color: #dc3545;"></span>
+                                    <small>Malattia</small>
+                                </span>
+                            </div>
                         </div>
-                    </div>
-                    <div class="onit-card p-3">
-                        <div id="calendarioAziendale" style="min-height:500px;"></div>
+                        
+                        <!-- Griglia calendario -->
+                        <div class="table-responsive">
+                            <table class="table table-bordered calendario-griglia" id="grigliaCalendario">
+                                <thead>
+                                    <tr id="headerGiorni">
+                                        <th class="col-dipendente">Dipendente</th>
+                                        <!-- Giorni generati dinamicamente -->
+                                    </tr>
+                                </thead>
+                                <tbody id="bodyGriglia">
+                                    <!-- Righe dipendenti generate dinamicamente -->
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
 
@@ -209,6 +238,9 @@
                         <button class="btn btn-outline-primary" id="btnTipoPermesso">
                             <i class="fa-solid fa-clock"></i> Permesso
                         </button>
+                        <button class="btn btn-outline-primary" id="btnTipoMalattia">
+                            <i class="fa-solid fa-virus"></i> Malattia
+                        </button>
                     </div>
                 </div>
                 <div class="mb-3">
@@ -270,6 +302,88 @@
     .fc-daygrid-day.fc-day-today.weekend-day {
         background-color: #fff3cd !important;
     }
+
+    /* Stili griglia calendario */
+    .legenda-box {
+        width: 16px;
+        height: 16px;
+        border-radius: 3px;
+        display: inline-block;
+    }
+
+    .calendario-griglia {
+        font-size: 0.75rem;
+        margin-bottom: 0;
+    }
+
+    .calendario-griglia th,
+    .calendario-griglia td {
+        text-align: center;
+        vertical-align: middle;
+        padding: 4px;
+        min-width: 35px;
+        height: 40px;
+    }
+
+    .calendario-griglia .col-dipendente {
+        text-align: left;
+        font-weight: 600;
+        min-width: 220px;
+        padding-left: 12px;
+        padding-right: 12px;
+        white-space: nowrap;
+        position: sticky;
+        left: 0;
+        background-color: white;
+        z-index: 10;
+    }
+
+    .calendario-griglia thead th {
+        background-color: #f8f9fa;
+        font-weight: 600;
+        font-size: 0.7rem;
+        position: sticky;
+        top: 0;
+        z-index: 5;
+    }
+
+    .calendario-griglia thead th.col-dipendente {
+        z-index: 15;
+    }
+
+    .calendario-griglia .giorno-weekend {
+        background-color: #f8f9fa;
+    }
+
+    .calendario-griglia .cella-evento {
+        font-weight: bold;
+        color: white;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: transform 0.1s;
+    }
+
+    .calendario-griglia .cella-evento:hover {
+        transform: scale(1.1);
+    }
+
+    .calendario-griglia .evento-ferie {
+        background-color: #28a745;
+    }
+
+    .calendario-griglia .evento-permesso {
+        background-color: #ffc107;
+        color: #333;
+    }
+
+    .calendario-griglia .evento-malattia {
+        background-color: #dc3545;
+    }
+
+    .table-responsive {
+        max-height: 600px;
+        overflow: auto;
+    }
 </style>
 }
 
@@ -277,23 +391,21 @@
 <script>
 (function() {
     var tipoCorrente = 'Ferie';
-    var calendarAziendale = null;
     var calendarMio = null;
 
     // ========================================
     // INIZIALIZZAZIONE
     // ========================================
+    var grigliaCaridata = false;
+    
     document.addEventListener('DOMContentLoaded', function() {
         caricaApprovazioni();
 
         document.getElementById('calendario-tab').addEventListener('shown.bs.tab', function() {
-            setTimeout(function() {
-                if (!calendarAziendale) {
-                    inizializzaCalendarioAziendale();
-                } else {
-                    calendarAziendale.render();
-                }
-            }, 200);
+            if (!grigliaCaridata) {
+                inizializzaCalendarioAziendale();
+                grigliaCaridata = true;
+            }
         });
 
         document.getElementById('mieferie-tab').addEventListener('shown.bs.tab', function() {
@@ -322,6 +434,7 @@
             tipoCorrente = 'Ferie';
             document.getElementById('btnTipoFerie').classList.add('active');
             document.getElementById('btnTipoPermesso').classList.remove('active');
+            document.getElementById('btnTipoMalattia').classList.remove('active');
             document.getElementById('alContainer').style.display = 'block';
         });
 
@@ -329,7 +442,24 @@
             tipoCorrente = 'Permesso';
             document.getElementById('btnTipoPermesso').classList.add('active');
             document.getElementById('btnTipoFerie').classList.remove('active');
+            document.getElementById('btnTipoMalattia').classList.remove('active');
             document.getElementById('alContainer').style.display = 'none';
+        });
+
+        document.getElementById('btnTipoMalattia').addEventListener('click', function() {
+            tipoCorrente = 'Malattia';
+            document.getElementById('btnTipoMalattia').classList.add('active');
+            document.getElementById('btnTipoFerie').classList.remove('active');
+            document.getElementById('btnTipoPermesso').classList.remove('active');
+            document.getElementById('alContainer').style.display = 'block';
+        });
+
+        document.getElementById('btnTipoMalattia').addEventListener('click', function() {
+            tipoCorrente = 'Malattia';
+            document.getElementById('btnTipoMalattia').classList.add('active');
+            document.getElementById('btnTipoFerie').classList.remove('active');
+            document.getElementById('btnTipoPermesso').classList.remove('active');
+            document.getElementById('alContainer').style.display = 'block';
         });
 
         document.getElementById('btnInviaRichiesta').addEventListener('click', function() {
@@ -357,7 +487,7 @@
                 } else {
                     container.innerHTML = '';
                     richieste.forEach(function(r) {
-                        var tipoIcon = r.tipo === 'Ferie' ? 'fa-umbrella-beach' : 'fa-clock';
+                        var tipoIcon = r.tipo === 'Ferie' ? 'fa-umbrella-beach' : (r.tipo === 'Permesso' ? 'fa-clock' : 'fa-virus');
                         var card = document.createElement('div');
                         card.className = 'onit-card p-3 mb-2 rend-card';
                         card.addEventListener('click', function() { apriModaleApprova(r); });
@@ -406,7 +536,7 @@
             alert(data.message || 'Approvata!');
             bootstrap.Modal.getInstance(document.getElementById('modaleApprova')).hide();
             caricaApprovazioni();
-            if (calendarAziendale) calendarAziendale.refetchEvents();
+            caricaDatiGriglia();
         })
         .catch(function() { alert('Errore di connessione'); });
     }
@@ -430,48 +560,172 @@
             alert(data.message || 'Respinta!');
             bootstrap.Modal.getInstance(document.getElementById('modaleApprova')).hide();
             caricaApprovazioni();
-            if (calendarAziendale) calendarAziendale.refetchEvents();
+            caricaDatiGriglia();
         })
         .catch(function() { alert('Errore di connessione'); });
     }
 
     // ========================================
-    // CALENDARIO AZIENDALE
+    // CALENDARIO AZIENDALE - GRIGLIA
     // ========================================
+    var meseCorrenteGriglia = new Date();
+    var datiRichiesteGriglia = [];
+    var tuttiDipendenti = [];
+
     function inizializzaCalendarioAziendale() {
-        var el = document.getElementById('calendarioAziendale');
-        calendarAziendale = new FullCalendar.Calendar(el, {
-            initialView: 'month',
-            locale: 'it',
-            firstDay: 1, // Inizia dal lunedì
-            headerToolbar: {
-                left: 'prev,next today',
-                center: 'title',
-                right: 'month,week'
-            },
-            dayCellClassNames: function(arg) {
-                var dayOfWeek = arg.date.getDay();
-                if (dayOfWeek === 6) return ['weekend-day', 'sabato'];
-                if (dayOfWeek === 0) return ['weekend-day', 'domenica'];
-                return [];
-            },
-            events: function(info, successCallback, failureCallback) {
-                fetch('/Responsabile/CongedoApi/GetFerieTutti')
-                    .then(function(res) { return res.json(); })
-                    .then(function(data) { successCallback(data); })
-                    .catch(function(err) { failureCallback(err); });
-            },
-            eventDidMount: function(info) {
-                var stato = info.event.extendedProps.stato;
-                if (stato === 'InAttesa') info.el.classList.add('fc-event-attesa');
-                else if (stato === 'Approvato') info.el.classList.add('fc-event-approvato');
-            },
-            eventClick: function(info) {
-                var p = info.event.extendedProps;
-                alert('Dipendente: ' + p.dipendente + '\nTipo: ' + p.tipo + '\nStato: ' + p.stato + '\nMotivo: ' + (p.motivo || 'N/A'));
-            }
+        // Carica i dati e genera la griglia
+        caricaDatiGriglia();
+        
+        // Gestori navigazione mese
+        document.getElementById('btnPrevMonth').addEventListener('click', function() {
+            meseCorrenteGriglia.setMonth(meseCorrenteGriglia.getMonth() - 1);
+            generaGriglia();
         });
-        calendarAziendale.render();
+        
+        document.getElementById('btnNextMonth').addEventListener('click', function() {
+            meseCorrenteGriglia.setMonth(meseCorrenteGriglia.getMonth() + 1);
+            generaGriglia();
+        });
+    }
+
+    function caricaDatiGriglia() {
+        // Carica sia le richieste che la lista di tutti i dipendenti
+        Promise.all([
+            fetch('/Responsabile/CongedoApi/GetFerieTutti').then(res => res.json()),
+            fetch('/Responsabile/CongedoApi/GetDipendenti').then(res => res.json())
+        ])
+        .then(function(results) {
+            datiRichiesteGriglia = results[0];
+            tuttiDipendenti = results[1];
+            generaGriglia();
+        })
+        .catch(function(err) {
+            console.error('Errore caricamento dati griglia:', err);
+        });
+    }
+
+    function generaGriglia() {
+        var anno = meseCorrenteGriglia.getFullYear();
+        var mese = meseCorrenteGriglia.getMonth();
+        
+        // Aggiorna titolo mese
+        var nomiMesi = ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno',
+                        'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
+        document.getElementById('meseCorrente').textContent = nomiMesi[mese] + ' ' + anno;
+        
+        // Calcola numero giorni nel mese
+        var primoGiorno = new Date(anno, mese, 1);
+        var ultimoGiorno = new Date(anno, mese + 1, 0);
+        var numGiorni = ultimoGiorno.getDate();
+        
+        // Genera header giorni
+        var headerGiorni = document.getElementById('headerGiorni');
+        headerGiorni.innerHTML = '<th class=\"col-dipendente\">Dipendente</th>';
+        
+        var nomiGiorniBrevi = ['DOM', 'LUN', 'MAR', 'MER', 'GIO', 'VEN', 'SAB'];
+        
+        for (var giorno = 1; giorno <= numGiorni; giorno++) {
+            var data = new Date(anno, mese, giorno);
+            var giornoSettimana = data.getDay();
+            var nomeGiorno = nomiGiorniBrevi[giornoSettimana];
+            var isWeekend = giornoSettimana === 0 || giornoSettimana === 6;
+            
+            var th = document.createElement('th');
+            th.innerHTML = nomeGiorno + '<br>' + (giorno < 10 ? '0' + giorno : giorno);
+            if (isWeekend) th.classList.add('giorno-weekend');
+            headerGiorni.appendChild(th);
+        }
+        
+        // Raggruppa richieste per dipendente
+        var richiestePerDipendente = {};
+        datiRichiesteGriglia.forEach(function(richiesta) {
+            var dipendente = richiesta.extendedProps ? richiesta.extendedProps.dipendente : richiesta.dipendente || 'Sconosciuto';
+            if (!richiestePerDipendente[dipendente]) {
+                richiestePerDipendente[dipendente] = [];
+            }
+            richiestePerDipendente[dipendente].push(richiesta);
+        });
+        
+        // Genera righe dipendenti
+        var bodyGriglia = document.getElementById('bodyGriglia');
+        bodyGriglia.innerHTML = '';
+        
+        if (tuttiDipendenti.length === 0) {
+            var tr = document.createElement('tr');
+            tr.innerHTML = '<td colspan=\"' + (numGiorni + 1) + '\" class=\"text-center text-muted py-4\">Nessun dipendente disponibile</td>';
+            bodyGriglia.appendChild(tr);
+            return;
+        }
+        
+        // Usa la lista completa di tutti i dipendenti
+        tuttiDipendenti.forEach(function(dipendente) {
+            var tr = document.createElement('tr');
+            
+            // Colonna dipendente
+            var tdNome = document.createElement('td');
+            tdNome.className = 'col-dipendente';
+            tdNome.textContent = dipendente.nomeCompleto;
+            tr.appendChild(tdNome);
+            
+            // Colonne giorni
+            for (var giorno = 1; giorno <= numGiorni; giorno++) {
+                var data = new Date(anno, mese, giorno);
+                var giornoSettimana = data.getDay();
+                var isWeekend = giornoSettimana === 0 || giornoSettimana === 6;
+                // Formatta data senza conversione UTC
+                var dataStr = anno + '-' + 
+                              (mese + 1 < 10 ? '0' : '') + (mese + 1) + '-' + 
+                              (giorno < 10 ? '0' : '') + giorno;
+                
+                var td = document.createElement('td');
+                if (isWeekend) td.classList.add('giorno-weekend');
+                
+                // Cerca richieste per questo giorno (può essere vuoto se non ha richieste)
+                var richiesteDipendente = richiestePerDipendente[dipendente.nomeCompleto] || [];
+                var richiestaGiorno = trovaRichiestaPerGiorno(richiesteDipendente, dataStr);
+                
+                if (richiestaGiorno) {
+                    var tipo = richiestaGiorno.extendedProps ? richiestaGiorno.extendedProps.tipo : richiestaGiorno.tipo;
+                    var stato = richiestaGiorno.extendedProps ? richiestaGiorno.extendedProps.stato : 'Approvato';
+                    var lettera = tipo === 'Ferie' ? 'F' : (tipo === 'Permesso' ? 'P' : 'M');
+                    var classe = tipo === 'Ferie' ? 'evento-ferie' : (tipo === 'Permesso' ? 'evento-permesso' : 'evento-malattia');
+                    
+                    td.innerHTML = '<span class=\"cella-evento ' + classe + '\">' + lettera + '</span>';
+                    td.title = tipo + (stato === 'InAttesa' ? ' - In attesa di approvazione' : ' (Approvato)');
+                }
+                
+                tr.appendChild(td);
+            }
+            
+            bodyGriglia.appendChild(tr);
+        });
+    }
+
+    function trovaRichiestaPerGiorno(richieste, dataStr) {
+        for (var i = 0; i < richieste.length; i++) {
+            var richiesta = richieste[i];
+            var start = richiesta.start || richiesta.dataInizio;
+            var end = richiesta.end || richiesta.dataFine;
+            
+            // Estrai solo la parte della data (YYYY-MM-DD) senza considerare l'ora
+            var startStr = start.split('T')[0];
+            var endStr = end ? end.split('T')[0] : startStr;
+            
+            // L'API restituisce end come data esclusiva (FullCalendar), quindi sottraiamo 1 giorno
+            if (end) {
+                var endDate = new Date(endStr + 'T00:00:00');
+                endDate.setDate(endDate.getDate() - 1);
+                endStr = endDate.getFullYear() + '-' + 
+                         (endDate.getMonth() + 1 < 10 ? '0' : '') + (endDate.getMonth() + 1) + '-' + 
+                         (endDate.getDate() < 10 ? '0' : '') + endDate.getDate();
+            }
+            
+            // Confronto diretto tra stringhe YYYY-MM-DD
+            if (dataStr >= startStr && dataStr <= endStr) {
+                return richiesta;
+            }
+        }
+        return null;
     }
 
     // ========================================
@@ -501,9 +755,19 @@
                     .catch(function(err) { failureCallback(err); });
             },
             eventDidMount: function(info) {
-                var stato = info.event.extendedProps.stato;
-                if (stato === 'InAttesa') info.el.classList.add('fc-event-attesa');
-                else if (stato === 'Approvato') info.el.classList.add('fc-event-approvato');
+                var tipo = info.event.extendedProps.tipo;
+                // Colori basati sul tipo: Ferie=verde, Permesso=giallo, Malattia=rosso
+                if (tipo === 'Ferie') {
+                    info.el.style.backgroundColor = '#28a745';
+                    info.el.style.borderColor = '#28a745';
+                } else if (tipo === 'Permesso') {
+                    info.el.style.backgroundColor = '#ffc107';
+                    info.el.style.borderColor = '#ffc107';
+                } else if (tipo === 'Malattia') {
+                    info.el.style.backgroundColor = '#dc3545';
+                    info.el.style.borderColor = '#dc3545';
+                }
+                info.el.style.color = '#fff';
             },
             eventClick: function(info) {
                 var p = info.event.extendedProps;
@@ -528,6 +792,7 @@
         tipoCorrente = 'Ferie';
         document.getElementById('btnTipoFerie').classList.add('active');
         document.getElementById('btnTipoPermesso').classList.remove('active');
+        document.getElementById('btnTipoMalattia').classList.remove('active');
         document.getElementById('alContainer').style.display = 'block';
         new bootstrap.Modal(document.getElementById('modaleCrea')).show();
     }
@@ -550,7 +815,7 @@
             alert(data.message || 'Richiesta inviata!');
             bootstrap.Modal.getInstance(document.getElementById('modaleCrea')).hide();
             if (calendarMio) calendarMio.refetchEvents();
-            if (calendarAziendale) calendarAziendale.refetchEvents();
+            caricaDatiGriglia();
         })
         .catch(function() { alert('Errore di connessione'); });
     }

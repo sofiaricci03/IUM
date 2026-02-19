@@ -57,6 +57,25 @@ namespace Template.Web.Areas.Responsabile.Controllers
         }
 
         // ========================================
+        // GET - TUTTI I DIPENDENTI
+        // ========================================
+        [HttpGet]
+        public virtual async Task<IActionResult> GetDipendenti()
+        {
+            var dipendenti = await _ctx.Dipendenti
+                .OrderBy(d => d.Cognome)
+                .ThenBy(d => d.Nome)
+                .Select(d => new
+                {
+                    id = d.Id,
+                    nomeCompleto = d.Nome + " " + d.Cognome
+                })
+                .ToListAsync();
+
+            return Ok(dipendenti);
+        }
+
+        // ========================================
         // GET - LE MIE FERIE (responsabile inserisce le sue)
         // ========================================
         [HttpGet]

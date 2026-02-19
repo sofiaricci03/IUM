@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Linq;
 using System.Security.Claims;
+using System.Threading.Tasks;
 using Template.Entities;
 using Template.Services;
 using Template.Services.Shared;
@@ -24,7 +26,73 @@ namespace Template.Web.Areas.Dipendente.Controllers
         }
 
         // =========================
-        // GET – Eventi calendario
+        // GET – TUTTE LE FERIE (tutti i dipendenti)
+        // =========================
+        [HttpGet]
+        public virtual async Task<IActionResult> GetFerieTutti()
+        {
+            var richieste = await _ctx.RichiestaFerie
+                .Include(r => r.Dipendente)
+                .Where(r => r.Stato != FerieStato.Rifiutato)
+                .ToListAsync();
+            var risultato = richieste.Select(r => new
+            {
+                id = r.Id,
+                title = r.Dipendente.Nome + " " + r.Dipendente.Cognome + " - " + r.Tipo,
+                start = r.DataInizio,
+                end = r.Tipo == "Ferie" || r.Tipo == "Malattia" ? r.DataFine.AddDays(1) : (DateTime?)null,
+                allDay = true,
+                color = r.Stato == FerieStato.InAttesa ? "#ffc107" : "#28a745",
+                extendedProps = new
+                {
+                    dipendenteId = r.DipendenteId,
+                    dipendente = r.Dipendente.Nome + " " + r.Dipendente.Cognome,
+                    motivo = r.Motivo,
+                    tipo = r.Tipo,
+                    stato = r.Stato.ToString()
+                }
+            }).ToList();
+
+            return Ok(risultato);
+        }
+
+        // =========================
+        // GET – TUTTI I DIPENDENTI
+        // =========================
+        [HttpGet]
+        public virtual async Task<IActionResult> GetDipendenti()
+        {
+            var dipendenti = await _ctx.Dipendenti
+                .OrderBy(d => d.Cognome)
+                .ThenBy(d => d.Nome)
+                .Select(d => new
+                {
+                    id = d.Id,
+                    nomeCompleto = d.Nome + " " + d.Cognome
+                })
+                .ToListAsync();
+            return Ok(dipendenti);
+        }
+
+        // =========================
+        // GET – INFO DIPENDENTE CORRENTE
+        // =========================
+        [HttpGet]
+        public virtual IActionResult GetDipendenteCorrente()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var dip = _ctx.Dipendenti.FirstOrDefault(d => d.UserId.ToString() == userId);
+            if (dip == null) return Unauthorized();
+
+            return Ok(new
+            {
+                id = dip.Id,
+                nomeCompleto = dip.Nome + " " + dip.Cognome
+            });
+        }
+
+        // =========================
+        // GET – Eventi calendario (solo mie richieste)
         // =========================
         [HttpGet]
         public virtual IActionResult GetRichieste()

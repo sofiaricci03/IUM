@@ -55,7 +55,37 @@
 
         <!-- MAIN CONTENT -->
         <div class="col-10">
-            <div id="calendarFerie" class="onit-card p-3" style="min-height:650px"></div>
+            <div class="onit-card p-4">
+                <!-- Header con pulsante nuova richiesta -->
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div class="d-flex align-items-center gap-3">
+                        <button class="btn btn-sm btn-outline-secondary" id="btnPrevMonth">
+                            <i class="fa-solid fa-chevron-left"></i>
+                        </button>
+                        <h4 class="mb-0" id="meseCorrente">Mese</h4>
+                        <button class="btn btn-sm btn-outline-secondary" id="btnNextMonth">
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </button>
+                    </div>
+                    <button class="btn btn-primary" id="btnNuovaRichiesta">
+                        <i class="fa-solid fa-plus"></i> Nuova Richiesta
+                    </button>
+                </div>
+
+                <!-- Griglia calendario -->
+                <div class="table-responsive">
+                    <table class="table table-bordered calendario-griglia">
+                        <thead>
+                            <tr id="headerGiorni">
+                                <!-- Generato dinamicamente -->
+                            </tr>
+                        </thead>
+                        <tbody id="bodyGriglia">
+                            <!-- Generato dinamicamente -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -66,7 +96,7 @@
     <div class="modal-dialog modal-md">
         <div class="modal-content onit-card">
             <div class="modal-header">
-                <h5 class="modal-title">Richiesta ferie / permesso</h5>
+                <h5 class="modal-title" id="modaleTitolo">Nuova Richiesta</h5>
                 <button class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
@@ -76,6 +106,7 @@
                     <select id="tipoFerie" class="form-select">
                         <option value="Ferie">Ferie</option>
                         <option value="Permesso">Permesso</option>
+                        <option value="Malattia">Malattia</option>
                     </select>
                 </div>
 
@@ -101,66 +132,554 @@
             </div>
             <div class="modal-footer">
                 <button class="btn btn-secondary" data-bs-dismiss="modal">Chiudi</button>
-                <button class="btn btn-secondary" id="btnRichiediFerie">Richiedi</button>
+                <button class="btn btn-primary" id="btnRichiediFerie">Richiedi</button>
             </div>
         </div>
     </div>
 </div>
 
 @section styles {
-    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet" />
-    
-    <style>
-        /* Evidenzia weekend in grigio chiaro */
-        .fc-day.weekend-day {
-            background-color: #f8f9fa !important;
-        }
+<style>
+    .calendario-griglia {
+        font-size: 0.85rem;
+        margin-bottom: 0;
+    }
+
+    .calendario-griglia th,
+    .calendario-griglia td {
+        padding: 8px 4px;
+        text-align: center;
+        vertical-align: middle;
+        min-width: 35px;
+    }
+
+    .calendario-griglia .col-dipendente {
+        position: sticky;
+        left: 0;
+        background-color: white;
+        font-weight: 500;
+        text-align: left;
+        padding-left: 12px;
+        padding-right: 12px;
+        padding-bottom: 15px;
+        min-width: 150px;
+        white-space: nowrap;
+        z-index: 10;
+        border-right: 2px solid #dee2e6;
+    }
+
+    .calendario-griglia thead th {
+        position: sticky;
+        top: 0;
+        background-color: #f8f9fa;
+        font-weight: 600;
+        z-index: 5;
+    }
+
+    .calendario-griglia thead th.col-dipendente {
+        z-index: 15;
+    }
+
+    .calendario-griglia .giorno-weekend {
+        background-color: #f8f9fa;
+    }
+
+    .calendario-griglia .cella-evento {
+        display: inline-block;
+        width: 24px;
+        height: 24px;
+        line-height: 24px;
+        font-weight: bold;
+        color: white;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: transform 0.1s;
+    }
+
+    .calendario-griglia .cella-evento:hover {
+        transform: scale(1.2);
+    }
+
+    .calendario-griglia .evento-ferie {
+        background-color: #28a745;
+    }
+
+    .calendario-griglia .evento-permesso {
+        background-color: #ffc107;
+    }
+
+    .calendario-griglia .evento-malattia {
+        background-color: #dc3545;
+    }
+
+    .calendario-griglia .evento-in-attesa {
+        opacity: 0.6;
+        border: 2px dashed #666;
+        background-color: #6c757d !important;
         
-        /* Colore leggermente più scuro per le celle header del weekend */
-        .fc-col-header-cell.fc-day-sat,
-        .fc-col-header-cell.fc-day-sun {
-            background-color: #e9ecef !important;
-        }
-        
-        /* Mantieni il giorno corrente visibile anche se cade nel weekend */
-        .fc-daygrid-day.fc-day-today.weekend-day {
-            background-color: #fff3cd !important;
-        }
-        
-        /* Stili per gli eventi ferie */
-        .fc-event {
-            border-radius: 4px;
-            font-size: 0.85rem;
-            padding: 2px 6px;
-            cursor: pointer;
-            font-weight: 500;
-        }
-        
-        .fc-event:hover {
-            opacity: 0.85;
-            transform: scale(1.02);
-            transition: all 0.2s;
-        }
-        
-        /* Stili per il modale */
-        .modal-body label.fw-bold {
-            color: #495057;
-            font-size: 0.9rem;
-            margin-bottom: 0.5rem;
-        }
-        
-        /* Stili per i datepicker */
-        input[type="date"] {
-            cursor: pointer;
-        }
-        
-        input[type="date"]::-webkit-calendar-picker-indicator {
-            cursor: pointer;
-            padding: 5px;
-        }
-    </style>
+    }
+
+    .calendario-griglia .riga-dipendente-corrente {
+        background-color: #fff9e6;
+    }
+
+    .calendario-griglia .riga-dipendente-corrente .col-dipendente {
+        background-color: #fff9e6;
+        font-weight: 600;
+    }
+
+    .table-responsive {
+        max-height: 600px;
+        overflow: auto;
+    }
+
+    .badge {
+        font-size: 0.75rem;
+        padding: 4px 8px;
+    }
+
+    .modal-body label.fw-bold {
+        color: #495057;
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+    }
+
+    input[type="date"] {
+        cursor: pointer;
+    }
+
+    input[type="date"]::-webkit-calendar-picker-indicator {
+        cursor: pointer;
+        padding: 5px;
+    }
+</style>
 }
 @section scripts {
-    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
-    <script src="~/js/dashboard-ferie.js"></script>
+<script>
+(function() {
+    var meseCorrenteGriglia = new Date();
+    var datiRichiesteGriglia = [];
+    var tuttiDipendenti = [];
+    var dipendenteCorrente = null;
+    var selectedId = null;
+
+    // ========================================
+    // INIZIALIZZAZIONE
+    // ========================================
+    document.addEventListener('DOMContentLoaded', function() {
+        inizializzaGriglia();
+        
+        document.getElementById('btnNuovaRichiesta').addEventListener('click', function() {
+            apriModaleNuovaRichiesta();
+        });
+
+        document.getElementById('btnPrevMonth').addEventListener('click', function() {
+            meseCorrenteGriglia.setMonth(meseCorrenteGriglia.getMonth() - 1);
+            generaGriglia();
+        });
+        
+        document.getElementById('btnNextMonth').addEventListener('click', function() {
+            meseCorrenteGriglia.setMonth(meseCorrenteGriglia.getMonth() + 1);
+            generaGriglia();
+        });
+
+        // Gestione cambio tipo
+        document.getElementById('tipoFerie').addEventListener('change', function() {
+            var tipo = this.value;
+            var dataFineContainer = document.getElementById('dataFineContainer');
+            
+            if (tipo === 'Permesso') {
+                dataFineContainer.style.display = 'none';
+                var dataInizio = document.getElementById('dataInizioFerie').value;
+                if (dataInizio) {
+                    document.getElementById('dataFineFerie').value = dataInizio;
+                    aggiornaPeriodo();
+                }
+            } else {
+                dataFineContainer.style.display = 'block';
+            }
+        });
+
+        // Gestione datepicker
+        document.getElementById('dataInizioFerie').addEventListener('change', function() {
+            var dataInizio = this.value;
+            if (document.getElementById('tipoFerie').value === 'Permesso') {
+                document.getElementById('dataFineFerie').value = dataInizio;
+            } else {
+                var dataFine = document.getElementById('dataFineFerie').value;
+                if (dataFine && dataFine < dataInizio) {
+                    document.getElementById('dataFineFerie').value = dataInizio;
+                }
+            }
+            aggiornaPeriodo();
+        });
+
+        document.getElementById('dataFineFerie').addEventListener('change', function() {
+            aggiornaPeriodo();
+        });
+
+        document.getElementById('btnRichiediFerie').addEventListener('click', function() {
+            if (selectedId) {
+                modificaRichiesta();
+            } else {
+                creaRichiesta();
+            }
+        });
+    });
+
+    function inizializzaGriglia() {
+        caricaDatiGriglia();
+    }
+
+    function caricaDatiGriglia() {
+        Promise.all([
+            fetch('/Dipendente/CongedoApi/GetFerieTutti').then(res => res.json()),
+            fetch('/Dipendente/CongedoApi/GetDipendenti').then(res => res.json()),
+            fetch('/Dipendente/CongedoApi/GetDipendenteCorrente').then(res => res.json())
+        ])
+        .then(function(results) {
+            datiRichiesteGriglia = results[0];
+            tuttiDipendenti = results[1];
+            dipendenteCorrente = results[2];
+            generaGriglia();
+        })
+        .catch(function(err) {
+            console.error('Errore caricamento dati griglia:', err);
+        });
+    }
+
+    function generaGriglia() {
+        var anno = meseCorrenteGriglia.getFullYear();
+        var mese = meseCorrenteGriglia.getMonth();
+        
+        var nomiMesi = ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno',
+                        'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
+        document.getElementById('meseCorrente').textContent = nomiMesi[mese] + ' ' + anno;
+        
+        var primoGiorno = new Date(anno, mese, 1);
+        var ultimoGiorno = new Date(anno, mese + 1, 0);
+        var numGiorni = ultimoGiorno.getDate();
+        
+        // Header giorni
+        var headerGiorni = document.getElementById('headerGiorni');
+        headerGiorni.innerHTML = '<th class="col-dipendente">Dipendente</th>';
+        
+        var nomiGiorniBrevi = ['DOM', 'LUN', 'MAR', 'MER', 'GIO', 'VEN', 'SAB'];
+        
+        for (var giorno = 1; giorno <= numGiorni; giorno++) {
+            var data = new Date(anno, mese, giorno);
+            var giornoSettimana = data.getDay();
+            var nomeGiorno = nomiGiorniBrevi[giornoSettimana];
+            var isWeekend = giornoSettimana === 0 || giornoSettimana === 6;
+            
+            var th = document.createElement('th');
+            th.innerHTML = nomeGiorno + '<br>' + (giorno < 10 ? '0' + giorno : giorno);
+            if (isWeekend) th.classList.add('giorno-weekend');
+            headerGiorni.appendChild(th);
+        }
+        
+        // Raggruppa richieste per dipendente
+        var richiestePerDipendente = {};
+        datiRichiesteGriglia.forEach(function(richiesta) {
+            var dipendente = richiesta.extendedProps ? richiesta.extendedProps.dipendente : richiesta.dipendente || 'Sconosciuto';
+            if (!richiestePerDipendente[dipendente]) {
+                richiestePerDipendente[dipendente] = [];
+            }
+            richiestePerDipendente[dipendente].push(richiesta);
+        });
+        
+        // Righe dipendenti
+        var bodyGriglia = document.getElementById('bodyGriglia');
+        bodyGriglia.innerHTML = '';
+        
+        if (tuttiDipendenti.length === 0) {
+            var tr = document.createElement('tr');
+            tr.innerHTML = '<td colspan="' + (numGiorni + 1) + '" class="text-center text-muted py-4">Nessun dipendente disponibile</td>';
+            bodyGriglia.appendChild(tr);
+            return;
+        }
+        
+        tuttiDipendenti.forEach(function(dipendente) {
+            var tr = document.createElement('tr');
+            
+            // Evidenzia la riga del dipendente corrente
+            if (dipendenteCorrente && dipendente.id === dipendenteCorrente.id) {
+                tr.classList.add('riga-dipendente-corrente');
+            }
+            
+            // Colonna dipendente
+            var tdNome = document.createElement('td');
+            tdNome.className = 'col-dipendente';
+            tdNome.textContent = dipendente.nomeCompleto;
+            tr.appendChild(tdNome);
+            
+            // Colonne giorni
+            for (var giorno = 1; giorno <= numGiorni; giorno++) {
+                var data = new Date(anno, mese, giorno);
+                var giornoSettimana = data.getDay();
+                var isWeekend = giornoSettimana === 0 || giornoSettimana === 6;
+                var dataStr = anno + '-' + 
+                              (mese + 1 < 10 ? '0' : '') + (mese + 1) + '-' + 
+                              (giorno < 10 ? '0' : '') + giorno;
+                
+                var td = document.createElement('td');
+                if (isWeekend) td.classList.add('giorno-weekend');
+                
+                var richiesteDipendente = richiestePerDipendente[dipendente.nomeCompleto] || [];
+                var richiestaGiorno = trovaRichiestaPerGiorno(richiesteDipendente, dataStr);
+                
+                if (richiestaGiorno) {
+                    var tipo = richiestaGiorno.extendedProps ? richiestaGiorno.extendedProps.tipo : richiestaGiorno.tipo;
+                    var stato = richiestaGiorno.extendedProps ? richiestaGiorno.extendedProps.stato : 'Approvato';
+                    var lettera = tipo === 'Ferie' ? 'F' : (tipo === 'Permesso' ? 'P' : 'M');
+                    var classe = tipo === 'Ferie' ? 'evento-ferie' : (tipo === 'Permesso' ? 'evento-permesso' : 'evento-malattia');
+                    
+                    var span = document.createElement('span');
+                    span.className = 'cella-evento ' + classe;
+                    if (stato === 'InAttesa') {
+                        span.classList.add('evento-in-attesa');
+                    }
+                    span.textContent = lettera;
+                    span.title = tipo + (stato === 'InAttesa' ? ' - In attesa di approvazione' : ' - Approvato');
+                    
+                    // Permetti modifica solo per le proprie richieste in attesa
+                    if (dipendenteCorrente && dipendente.id === dipendenteCorrente.id && stato === 'InAttesa') {
+                        span.style.cursor = 'pointer';
+                        span.addEventListener('click', function() {
+                            apriModaleModifica(richiestaGiorno);
+                        });
+                    }
+                    
+                    td.appendChild(span);
+                }
+                
+                tr.appendChild(td);
+            }
+            
+            bodyGriglia.appendChild(tr);
+        });
+    }
+
+    function trovaRichiestaPerGiorno(richieste, dataStr) {
+        for (var i = 0; i < richieste.length; i++) {
+            var richiesta = richieste[i];
+            var start = richiesta.start || richiesta.dataInizio;
+            var end = richiesta.end || richiesta.dataFine;
+            
+            var startStr = start.split('T')[0];
+            var endStr = end ? end.split('T')[0] : startStr;
+            
+            if (end) {
+                var endDate = new Date(endStr + 'T00:00:00');
+                endDate.setDate(endDate.getDate() - 1);
+                endStr = endDate.getFullYear() + '-' + 
+                         (endDate.getMonth() + 1 < 10 ? '0' : '') + (endDate.getMonth() + 1) + '-' + 
+                         (endDate.getDate() < 10 ? '0' : '') + endDate.getDate();
+            }
+            
+            if (dataStr >= startStr && dataStr <= endStr) {
+                return richiesta;
+            }
+        }
+        return null;
+    }
+
+    // ========================================
+    // GESTIONE MODALE
+    // ========================================
+    function apriModaleNuovaRichiesta() {
+        selectedId = null;
+        document.getElementById('modaleTitolo').textContent = 'Nuova Richiesta';
+        document.getElementById('tipoFerie').value = 'Ferie';
+        document.getElementById('dataInizioFerie').value = '';
+        document.getElementById('dataFineFerie').value = '';
+        document.getElementById('descrizioneFerie').value = '';
+        document.getElementById('dataFineContainer').style.display = 'block';
+        document.getElementById('periodoFerie').textContent = '-';
+        document.getElementById('totaleGiorni').textContent = '0';
+        document.getElementById('btnRichiediFerie').textContent = 'Richiedi';
+        
+        var btnElimina = document.getElementById('btnEliminaRichiesta');
+        if (btnElimina) btnElimina.remove();
+        
+        new bootstrap.Modal(document.getElementById('modaleFerie')).show();
+    }
+
+    function apriModaleModifica(richiesta) {
+        selectedId = richiesta.id;
+        document.getElementById('modaleTitolo').textContent = 'Modifica Richiesta';
+        
+        var tipo = richiesta.extendedProps.tipo;
+        var start = richiesta.start.split('T')[0];
+        var end = richiesta.end ? richiesta.end.split('T')[0] : start;
+        
+        if (richiesta.end) {
+            var endDate = new Date(end + 'T00:00:00');
+            endDate.setDate(endDate.getDate() - 1);
+            end = endDate.getFullYear() + '-' + 
+                  (endDate.getMonth() + 1 < 10 ? '0' : '') + (endDate.getMonth() + 1) + '-' + 
+                  (endDate.getDate() < 10 ? '0' : '') + endDate.getDate();
+        }
+        
+        document.getElementById('tipoFerie').value = tipo;
+        document.getElementById('dataInizioFerie').value = start;
+        document.getElementById('dataFineFerie').value = end;
+        document.getElementById('descrizioneFerie').value = richiesta.extendedProps.motivo || '';
+        
+        if (tipo === 'Permesso') {
+            document.getElementById('dataFineContainer').style.display = 'none';
+        } else {
+            document.getElementById('dataFineContainer').style.display = 'block';
+        }
+        
+        aggiornaPeriodo();
+        document.getElementById('btnRichiediFerie').textContent = 'Salva modifiche';
+        aggiungiBottoneElimina();
+        
+        new bootstrap.Modal(document.getElementById('modaleFerie')).show();
+    }
+
+    function aggiungiBottoneElimina() {
+        var footer = document.querySelector('#modaleFerie .modal-footer');
+        var esistente = document.getElementById('btnEliminaRichiesta');
+        if (esistente) return;
+        
+        var btnElimina = document.createElement('button');
+        btnElimina.id = 'btnEliminaRichiesta';
+        btnElimina.className = 'btn btn-danger me-auto';
+        btnElimina.textContent = 'Elimina';
+        btnElimina.addEventListener('click', eliminaRichiesta);
+        footer.insertBefore(btnElimina, footer.firstChild);
+    }
+
+    function aggiornaPeriodo() {
+        var dataInizio = document.getElementById('dataInizioFerie').value;
+        var dataFine = document.getElementById('dataFineFerie').value;
+        var tipo = document.getElementById('tipoFerie').value;
+        
+        if (!dataInizio) {
+            document.getElementById('periodoFerie').textContent = '-';
+            document.getElementById('totaleGiorni').textContent = '0';
+            return;
+        }
+        
+        if (tipo === 'Permesso') {
+            dataFine = dataInizio;
+        }
+        
+        if (!dataFine) {
+            document.getElementById('periodoFerie').textContent = '-';
+            document.getElementById('totaleGiorni').textContent = '0';
+            return;
+        }
+        
+        var start = new Date(dataInizio + 'T00:00:00');
+        var end = new Date(dataFine + 'T00:00:00');
+        var diffTime = Math.abs(end - start);
+        var diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+        
+        var formatter = new Intl.DateTimeFormat('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        document.getElementById('periodoFerie').textContent = formatter.format(start) + ' – ' + formatter.format(end);
+        document.getElementById('totaleGiorni').textContent = diffDays;
+    }
+
+    function creaRichiesta() {
+        var tipo = document.getElementById('tipoFerie').value;
+        var dataInizio = document.getElementById('dataInizioFerie').value;
+        var dataFine = document.getElementById('dataFineFerie').value;
+        var motivo = document.getElementById('descrizioneFerie').value;
+        
+        if (!dataInizio) {
+            alert('Inserisci la data di inizio');
+            return;
+        }
+        
+        if (tipo !== 'Permesso' && !dataFine) {
+            alert('Inserisci la data di fine');
+            return;
+        }
+        
+        if (tipo === 'Permesso') {
+            dataFine = dataInizio;
+        }
+        
+        fetch('/Dipendente/CongedoApi/Richiedi', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                tipo: tipo,
+                dal: dataInizio,
+                al: dataFine,
+                motivo: motivo
+            })
+        })
+        .then(function(response) { return response.json(); })
+        .then(function(data) {
+            alert(data.message || 'Richiesta inviata!');
+            bootstrap.Modal.getInstance(document.getElementById('modaleFerie')).hide();
+            caricaDatiGriglia();
+        })
+        .catch(function() { alert('Errore di connessione'); });
+    }
+
+    function modificaRichiesta() {
+        var tipo = document.getElementById('tipoFerie').value;
+        var dataInizio = document.getElementById('dataInizioFerie').value;
+        var dataFine = document.getElementById('dataFineFerie').value;
+        var motivo = document.getElementById('descrizioneFerie').value;
+        
+        if (!dataInizio) {
+            alert('Inserisci la data di inizio');
+            return;
+        }
+        
+        if (tipo !== 'Permesso' && !dataFine) {
+            alert('Inserisci la data di fine');
+            return;
+        }
+        
+        if (tipo === 'Permesso') {
+            dataFine = dataInizio;
+        }
+        
+        fetch('/Dipendente/CongedoApi/Update', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                id: selectedId,
+                tipo: tipo,
+                dal: dataInizio,
+                al: dataFine,
+                motivo: motivo
+            })
+        })
+        .then(function(response) { return response.json(); })
+        .then(function(data) {
+            alert('Richiesta aggiornata!');
+            bootstrap.Modal.getInstance(document.getElementById('modaleFerie')).hide();
+            caricaDatiGriglia();
+        })
+        .catch(function() { alert('Errore di connessione'); });
+    }
+
+    function eliminaRichiesta() {
+        if (!confirm('Sei sicuro di voler eliminare questa richiesta?')) {
+            return;
+        }
+        
+        fetch('/Dipendente/CongedoApi/Delete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(selectedId)
+        })
+        .then(function(response) { return response.json(); })
+        .then(function(data) {
+            alert('Richiesta eliminata!');
+            bootstrap.Modal.getInstance(document.getElementById('modaleFerie')).hide();
+            caricaDatiGriglia();
+        })
+        .catch(function() { alert('Errore di connessione'); });
+    }
+})();
+</script>
 }
