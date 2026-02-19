@@ -177,7 +177,6 @@ namespace Template.Web.Areas.Dipendente.Controllers
             _ctx.AttivitaLavorative.Add(entity);
             await _ctx.SaveChangesAsync();
 
-            return Ok(new { message = "Attività salvata con successo!" });
         }
 
         // ==========================
@@ -244,8 +243,6 @@ namespace Template.Web.Areas.Dipendente.Controllers
             entity.SpesaAlloggio = dto.spesaAlloggio;
 
             await _ctx.SaveChangesAsync();
-
-            return Ok(new { message = "Attività aggiornata con successo!" });
         }
 
         // ==========================
@@ -276,7 +273,6 @@ namespace Template.Web.Areas.Dipendente.Controllers
             _ctx.AttivitaLavorative.Remove(entity);
             await _ctx.SaveChangesAsync();
 
-            return Ok(new { message = "Attività eliminata con successo!" });
         }
 
         // ==========================

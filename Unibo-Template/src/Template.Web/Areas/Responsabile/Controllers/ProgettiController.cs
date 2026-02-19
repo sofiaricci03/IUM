@@ -183,9 +183,6 @@ namespace Template.Web.Areas.Responsabile.Controllers
 
             _context.AssegnazioniDipendentiProgetti.AddRange(nuoveAssegnazioni);
             await _context.SaveChangesAsync();
-
-            return Ok(new { message = "Assegnazioni aggiornate con successo!" });
-        }
     }
 
     // ViewModels

@@ -196,7 +196,6 @@ namespace Template.Web.Areas.Dipendente.Controllers
 
             await _ctx.SaveChangesAsync();
 
-            return Ok(new { message = "Rendicontazione inviata con successo!" });
         }
 
         // API per ottenere progetti disponibili

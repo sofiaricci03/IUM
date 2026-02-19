@@ -112,7 +112,6 @@ namespace Template.Web.Areas.Dipendente.Controllers
             _ctx.RichiestaFerie.Add(richiesta);
             _ctx.SaveChanges();
 
-            return Ok(new { message = "Richiesta inviata con successo!" });
         }
 
         // =========================
