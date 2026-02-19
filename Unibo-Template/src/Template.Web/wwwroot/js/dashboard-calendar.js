@@ -508,6 +508,10 @@ document.addEventListener("DOMContentLoaded", function () {
     aggiornaTitoloCalendario();
     caricaEventi();
     
+    // Imposta il pulsante della vista iniziale (Mese) come attivo
+    document.getElementById("btnMese").classList.remove("btn-outline-primary");
+    document.getElementById("btnMese").classList.add("btn-primary");
+    
     const btnRendiconta = document.getElementById('btnRendiconta');
     if (btnRendiconta) btnRendiconta.addEventListener('click', inviaRendicontazione);
     
@@ -530,11 +534,23 @@ document.addEventListener("DOMContentLoaded", function () {
         aggiornaTitoloCalendario(); 
     });
     
-
-    document.getElementById("prevBtn").addEventListener("click", () => { calendar.prev(); aggiornaTitoloCalendario(); });
     document.getElementById("nextBtn").addEventListener("click", () => { calendar.next(); aggiornaTitoloCalendario(); });
-    document.getElementById("btnSettimana").addEventListener("click", () => calendar.changeView("timeGridWeek"));
-    document.getElementById("btnMese").addEventListener("click", () => calendar.changeView("dayGridMonth"));
+    
+    document.getElementById("btnSettimana").addEventListener("click", () => {
+        calendar.changeView("timeGridWeek");
+        document.getElementById("btnSettimana").classList.remove("btn-outline-primary");
+        document.getElementById("btnSettimana").classList.add("btn-primary");
+        document.getElementById("btnMese").classList.remove("btn-primary");
+        document.getElementById("btnMese").classList.add("btn-outline-primary");
+    });
+    
+    document.getElementById("btnMese").addEventListener("click", () => {
+        calendar.changeView("dayGridMonth");
+        document.getElementById("btnMese").classList.remove("btn-outline-primary");
+        document.getElementById("btnMese").classList.add("btn-primary");
+        document.getElementById("btnSettimana").classList.remove("btn-primary");
+        document.getElementById("btnSettimana").classList.add("btn-outline-primary");
+    });
     
     document.getElementById("checkTrasferta").addEventListener("change", function() {
         document.getElementById("boxTrasferta").style.display = this.checked ? "block" : "none";
