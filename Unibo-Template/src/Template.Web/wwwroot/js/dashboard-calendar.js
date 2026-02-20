@@ -321,8 +321,7 @@ let dto = {
         
         if (errorMessages.length > 0) {
             alert(`Salvate ${successCount}/${giorni.length} attività.\n\nErrori:\n${errorMessages.join('\n')}`);
-        } else {
-            alert(`${successCount} attività salvate con successo!`);
+          
         }
         return;
     }
@@ -345,7 +344,7 @@ let dto = {
             document.body.classList.remove('modal-open');
             document.body.style.overflow = '';
             onAttivitaSalvataConSuccesso();
-            alert(data.message || "Attività salvata!");
+            return Ok(new {}); // Corpo JSON vuoto
         } else {
             alert(data.error || "Errore nel salvataggio");
         }
@@ -372,6 +371,7 @@ document.getElementById("btnElimina").addEventListener("click", async function (
         document.body.classList.remove('modal-open');
         document.body.style.overflow = '';
         onAttivitaSalvataConSuccesso();
+        return Ok(new {}); // Corpo JSON vuoto
     }
 });
 

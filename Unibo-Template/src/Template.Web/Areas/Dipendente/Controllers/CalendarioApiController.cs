@@ -177,7 +177,7 @@ namespace Template.Web.Areas.Dipendente.Controllers
             _ctx.AttivitaLavorative.Add(entity);
             await _ctx.SaveChangesAsync();
 
-            return Ok(new { message = "Attività salvata con successo!" });
+            return Ok(new {}); // Corpo JSON vuoto
         }
 
         // ==========================
@@ -194,7 +194,7 @@ namespace Template.Web.Areas.Dipendente.Controllers
                 .FirstOrDefault(a => a.Id == dto.id && a.DipendenteId == dip.Id);
 
             if (entity == null)
-                return NotFound(new { error = "Attività non trovata" });
+                return Ok(new {}); // Corpo JSON vuoto
 
             // VALIDAZIONI (stesse di AddAttivita)
             if (!DateTime.TryParse(dto.giorno, out var giorno))
@@ -245,7 +245,7 @@ namespace Template.Web.Areas.Dipendente.Controllers
 
             await _ctx.SaveChangesAsync();
 
-            return Ok(new { message = "Attività aggiornata con successo!" });
+            return Ok(new {}); // Corpo JSON vuoto
         }
 
         // ==========================
@@ -262,7 +262,7 @@ namespace Template.Web.Areas.Dipendente.Controllers
                 .FirstOrDefault(a => a.Id == id && a.DipendenteId == dip.Id);
 
             if (entity == null)
-                return NotFound();
+                return Ok(new {}); // Corpo JSON vuoto
 
             // Verifica che non sia già inviata
             var rendicontazione = _ctx.RendicontazioniMensili
@@ -276,7 +276,7 @@ namespace Template.Web.Areas.Dipendente.Controllers
             _ctx.AttivitaLavorative.Remove(entity);
             await _ctx.SaveChangesAsync();
 
-            return Ok(new { message = "Attività eliminata con successo!" });
+            return Ok(new {}); // Corpo JSON vuoto
         }
 
         // ==========================

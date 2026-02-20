@@ -181,10 +181,12 @@ namespace Template.Web.Areas.Responsabile.Controllers
                 Attivo = true
             }).ToList();
 
+        
+
             _context.AssegnazioniDipendentiProgetti.AddRange(nuoveAssegnazioni);
             await _context.SaveChangesAsync();
 
-            return Ok(new { message = "Assegnazioni aggiornate con successo!" });
+        return NoContent();
         }
     }
 

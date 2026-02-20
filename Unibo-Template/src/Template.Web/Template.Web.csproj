@@ -8,6 +8,7 @@
 		<PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.11" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
 		<PackageReference Include="SG4MVC" Version="0.9.4-beta" />
+		<PackageReference Include="System.Linq.Dynamic.Core" Version="1.6.6" />
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(Configuration)' == 'Debug'">
