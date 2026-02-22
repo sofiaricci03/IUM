@@ -33,6 +33,18 @@ function formatTimeLocal(date) {
     return date.toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit", hour12: false });
 }
 
+function formatDateLocal(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+function normalizeDateString(value) {
+    if (!value) return "";
+    return value.includes('T') ? value.split('T')[0] : value;
+}
+
 function aggiornaTitoloCalendario() {
     const titolo = document.getElementById("titleCalendar");
     if (!titolo) return;
@@ -137,6 +149,7 @@ function onAttivitaSalvataConSuccesso() {
 //  APRI POPUP PER NUOVA ATTIVITÀ
 // ----------------------
 function apriPopupPerData(dateStr) {
+    const normalizedDate = normalizeDateString(dateStr);
     const oraInizio = document.getElementById("oraInizio");
     const oraFine = document.getElementById("oraFine");
     const progetto = document.getElementById("progetto");
@@ -167,12 +180,12 @@ function apriPopupPerData(dateStr) {
     
     if (btnSalva) {
         btnSalva.removeAttribute("data-id");
-        btnSalva.setAttribute("data-date-start", dateStr);
-        btnSalva.setAttribute("data-date-end", dateStr);
+        btnSalva.setAttribute("data-date-start", normalizedDate);
+        btnSalva.setAttribute("data-date-end", normalizedDate);
     }
     
     if (dataSelezionata) {
-        dataSelezionata.textContent = new Date(dateStr + 'T00:00:00').toLocaleDateString("it-IT");
+        dataSelezionata.textContent = new Date(normalizedDate + 'T00:00:00').toLocaleDateString("it-IT");
     }
     
     if (btnElimina) btnElimina.style.display = "none";
@@ -184,14 +197,16 @@ function apriPopupPerData(dateStr) {
 //  APRI POPUP PER RANGE DATE
 // ----------------------
 function apriPopupPerRange(startStr, endStr) {
-    const start = new Date(startStr + 'T00:00:00');
-    let end = new Date(endStr + 'T00:00:00');
+    const normalizedStart = normalizeDateString(startStr);
+    const normalizedEnd = normalizeDateString(endStr);
+    const start = new Date(normalizedStart + 'T00:00:00');
+    let end = new Date(normalizedEnd + 'T00:00:00');
 
     if (end < start) end = new Date(start);
 
     const giorni = [];
     for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-        giorni.push(new Date(d).toISOString().split('T')[0]);
+        giorni.push(formatDateLocal(d));
     }
 
     const oraInizio = document.getElementById("oraInizio");
@@ -224,8 +239,8 @@ function apriPopupPerRange(startStr, endStr) {
 
     if (btnSalva) {
         btnSalva.removeAttribute("data-id");
-        btnSalva.setAttribute("data-date-start", startStr);
-        btnSalva.setAttribute("data-date-end", end.toISOString().split('T')[0]);
+        btnSalva.setAttribute("data-date-start", normalizedStart);
+        btnSalva.setAttribute("data-date-end", formatDateLocal(end));
     }
 
     if (dataSelezionata) {
@@ -243,9 +258,9 @@ function apriPopupPerRange(startStr, endStr) {
 // ----------------------
 document.getElementById("btnSalva").addEventListener("click", async function () {
     const id = this.getAttribute("data-id");
-    const giornoSingolo = this.getAttribute("data-date");
-    const dateStart = this.getAttribute("data-date-start");
-    const dateEnd = this.getAttribute("data-date-end");
+    const giornoSingolo = normalizeDateString(this.getAttribute("data-date"));
+    const dateStart = normalizeDateString(this.getAttribute("data-date-start"));
+    const dateEnd = normalizeDateString(this.getAttribute("data-date-end"));
     
     const progettoSelect = document.getElementById("progetto");
     const progettoId = progettoSelect.value;
@@ -282,12 +297,12 @@ let dto = {
 
     // Range di date
     if (!id && dateStart && dateEnd) {
-        const start = new Date(dateStart);
-        const end = new Date(dateEnd);
+        const start = new Date(dateStart + 'T00:00:00');
+        const end = new Date(dateEnd + 'T00:00:00');
         const giorni = [];
         
         for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-            giorni.push(new Date(d).toISOString().split('T')[0]);
+            giorni.push(formatDateLocal(d));
         }
         
         let successCount = 0;
@@ -459,7 +474,7 @@ document.addEventListener("DOMContentLoaded", function () {
             }
 
             document.getElementById("btnSalva").setAttribute("data-id", ev.id);
-            document.getElementById("btnSalva").setAttribute("data-date", start.toISOString().substring(0, 10));
+            document.getElementById("btnSalva").setAttribute("data-date", formatDateLocal(start));
             document.getElementById("btnElimina").style.display = "inline-block";
             document.getElementById("btnElimina").setAttribute("data-id", ev.id);
             document.getElementById("dataSelezionata").textContent = start.toLocaleDateString("it-IT");
@@ -478,9 +493,9 @@ document.addEventListener("DOMContentLoaded", function () {
         },
         
         dayCellDidMount: function(info) {
-            const dateStr = info.date.toISOString().split('T')[0];
+            const dateStr = formatDateLocal(info.date);
             const events = calendar.getEvents().filter(e => 
-                e.start && e.start.toISOString().split('T')[0] === dateStr
+                e.start && formatDateLocal(e.start) === dateStr
             );
             
             if (events.length > 0) {

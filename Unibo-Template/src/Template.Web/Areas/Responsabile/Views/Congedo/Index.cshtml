@@ -454,6 +454,20 @@
     var tipoCorrente = 'Ferie';
     var calendarMio = null;
 
+    function mostraNotificaPiccola(testo, tipo) {
+        if (typeof utilities !== 'undefined') {
+            if (tipo === 'success' && typeof utilities.alertSuccess === 'function') {
+                utilities.alertSuccess(testo, 2500);
+                return;
+            }
+            if (tipo === 'warning' && typeof utilities.alertWarning === 'function') {
+                utilities.alertWarning(testo, 2500);
+                return;
+            }
+        }
+        alert(testo);
+    }
+
     // ========================================
     // INIZIALIZZAZIONE
     // ========================================
@@ -594,7 +608,7 @@
         })
         .then(function(response) { return response.json(); })
         .then(function(data) {
-            alert(data.message || 'Approvata!');
+            mostraNotificaPiccola('Richiesta approvata!', 'success');
             bootstrap.Modal.getInstance(document.getElementById('modaleApprova')).hide();
             caricaApprovazioni();
             caricaDatiGriglia();
@@ -618,7 +632,7 @@
         })
         .then(function(response) { return response.json(); })
         .then(function(data) {
-            alert(data.message || 'Respinta!');
+            mostraNotificaPiccola('Richiesta respinta', 'warning');
             bootstrap.Modal.getInstance(document.getElementById('modaleApprova')).hide();
             caricaApprovazioni();
             caricaDatiGriglia();

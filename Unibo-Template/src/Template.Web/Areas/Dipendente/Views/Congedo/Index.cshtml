@@ -667,7 +667,11 @@
         })
         .then(function(response) { return response.json(); })
         .then(function(data) {
-            alert(data.message || 'Richiesta inviata!');
+            if (typeof utilities !== 'undefined' && typeof utilities.alertSuccess === 'function') {
+                utilities.alertSuccess('Richiesta inviata con successo', 2500);
+            } else {
+                alert('Richiesta inviata con successo');
+            }
             bootstrap.Modal.getInstance(document.getElementById('modaleFerie')).hide();
             caricaDatiGriglia();
         })
